@@ -1,3 +1,5 @@
+[![CI/CD Pipeline](https://github.com/songfei1983/play-spring-boot-api/actions/workflows/ci.yml/badge.svg)](https://github.com/songfei1983/play-spring-boot-api/actions/workflows/ci.yml)
+
 # Play Spring Boot API
 
 一个基于 Spring Boot 的 RESTful API 项目，采用领域驱动设计 (DDD) 架构模式，提供用户管理、购买历史、活动跟踪和用户档案等功能。
