@@ -41,6 +41,39 @@
   - **临时文件**: 各种临时文件和系统生成文件
 - **跨平台支持**: Windows (Thumbs.db) 和 Linux 系统文件
 
+#### 🚀 CI/CD 自动化流水线
+
+**GitHub Actions 工作流**
+- 创建 `.github/workflows/ci.yml` - 完整的 CI/CD 流水线
+- **多任务并行执行**:
+  - 测试和构建 (支持 Java 17 和 21 多版本矩阵)
+  - 代码质量分析 (SonarCloud 集成)
+  - 安全扫描 (OWASP 依赖漏洞检查)
+  - Docker 构建 (多平台镜像构建和推送)
+- **自动化功能**:
+  - 单元测试和集成测试执行
+  - JaCoCo 测试覆盖率报告生成和 Codecov 上传
+  - Maven 依赖缓存优化
+  - 构建产物自动上传
+  - 仅在 main 分支推送时构建 Docker 镜像
+- **触发条件**: Push 和 Pull Request 到 main/develop 分支
+
+**Docker 容器化支持**
+- 创建 `Dockerfile` - 多阶段构建优化
+- **特性**:
+  - 使用 Eclipse Temurin JRE 17 Alpine 基础镜像
+  - 非 root 用户运行提高安全性
+  - 健康检查配置
+  - 构建缓存优化
+- 创建 `.dockerignore` - 优化构建上下文
+- 支持多平台镜像 (linux/amd64, linux/arm64)
+
+**安全和质量保障**
+- 创建 `.github/dependency-check-suppressions.xml` - OWASP 扫描抑制规则
+- 集成 SonarCloud 代码质量分析
+- OWASP 依赖漏洞扫描
+- 安全最佳实践 (非 root 用户、最小权限)
+
 #### 🔧 代码重构
 
 **使用 Lombok 简化 Domain 层实体类**

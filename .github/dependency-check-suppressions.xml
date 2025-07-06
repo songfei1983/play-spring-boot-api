@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+        OWASP Dependency Check 抑制文件
+        用于忽略已知的误报或已接受的风险
+        
+        示例抑制规则：
+        
+        <suppress>
+            <notes><![CDATA[
+                描述为什么要抑制这个漏洞
+            ]]></notes>
+            <packageUrl regex="true">^pkg:maven/org\.springframework/.*$</packageUrl>
+            <cve>CVE-2023-XXXXX</cve>
+        </suppress>
+        
+        <suppress>
+            <notes><![CDATA[
+                抑制特定文件的所有漏洞
+            ]]></notes>
+            <filePath regex="true">.*\.jar</filePath>
+            <cpe>cpe:/a:apache:commons_collections</cpe>
+        </suppress>
+    -->
+    
+    <!-- 示例：抑制测试依赖的低风险漏洞 -->
+    <suppress>
+        <notes><![CDATA[
+            测试依赖，不会部署到生产环境
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.junit\..*</packageUrl>
+        <cvssBelow>7.0</cvssBelow>
+    </suppress>
+    
+    <!-- 示例：抑制 Spring Boot 测试相关的误报 -->
+    <suppress>
+        <notes><![CDATA[
+            Spring Boot 测试依赖的误报
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-test.*</packageUrl>
+        <cvssBelow>7.0</cvssBelow>
+    </suppress>
+    
+</suppressions>

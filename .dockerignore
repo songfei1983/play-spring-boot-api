@@ -1,0 +1,62 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGE.md
+*.md
+
+# IDE
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+.metals
+.bloop
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Logs
+*.log
+logs/
+
+# Test reports
+target/surefire-reports/
+target/site/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# CI/CD
+.github/
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Other
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
