@@ -337,6 +337,26 @@ class PurchaseHistoryControllerTest {
     }
 
     @Test
+    void getPurchasesByUserIdAndTimeRange_ShouldReturnFilteredPurchases() throws Exception {
+        // Given
+        LocalDateTime startTime = LocalDateTime.now().minusDays(7);
+        LocalDateTime endTime = LocalDateTime.now();
+        when(purchaseHistoryService.getPurchasesByUserIdAndTimeRange(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(Arrays.asList(testPurchase));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/time-range")
+                        .param("startTime", startTime.toString())
+                        .param("endTime", endTime.toString()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1));
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByUserIdAndTimeRange(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class));
+    }
+
+    @Test
     void getUserTotalAmount_ShouldReturnTotalAmountResponse() throws Exception {
         // Given
         BigDecimal totalAmount = new BigDecimal("199.98");
@@ -662,5 +682,195 @@ class PurchaseHistoryControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(purchaseHistoryService, times(1)).deletePurchase(999L);
+    }
+
+    @Test
+    void getPurchasesByTimeRange_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByTimeRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenThrow(new IllegalArgumentException("Invalid time range"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/time-range")
+                        .param("startTime", "invalid-date")
+                        .param("endTime", "invalid-date"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getPurchasesByPriceRange_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByPriceRange(any(BigDecimal.class), any(BigDecimal.class)))
+                .thenThrow(new IllegalArgumentException("Invalid price range"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/price-range")
+                        .param("minPrice", "-10.00")
+                        .param("maxPrice", "0.00"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByPriceRange(any(BigDecimal.class), any(BigDecimal.class));
+    }
+
+    @Test
+    void getPurchasesByPaymentMethod_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByPaymentMethod(anyString()))
+                .thenThrow(new IllegalArgumentException("Invalid payment method"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/payment-method/INVALID_METHOD"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByPaymentMethod("INVALID_METHOD");
+    }
+
+    @Test
+    void getPurchasesByChannel_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByChannel(anyString()))
+                .thenThrow(new IllegalArgumentException("Invalid channel"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/channel/INVALID_CHANNEL"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByChannel("INVALID_CHANNEL");
+    }
+
+    @Test
+    void getRecentPurchasesByUserId_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getRecentPurchasesByUserId(anyLong(), anyInt()))
+                .thenThrow(new IllegalArgumentException("Invalid user ID or limit"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/0/recent")
+                        .param("limit", "-1"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getRecentPurchasesByUserId(0L, -1);
+    }
+
+    @Test
+    void getUserTotalAmount_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserTotalAmount(anyLong()))
+                .thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/0/total-amount"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getUserTotalAmount(0L);
+    }
+
+    @Test
+    void getUserPurchaseCount_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserPurchaseCount(anyLong()))
+                .thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/0/count"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getUserPurchaseCount(0L);
+    }
+
+    @Test
+    void getUserFavoriteBrand_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserFavoriteBrand(anyLong()))
+                .thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/0/favorite-brand"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getUserFavoriteBrand(0L);
+    }
+
+    @Test
+    void createPurchases_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.createPurchases(anyList()))
+                .thenThrow(new IllegalArgumentException("Invalid purchase data"));
+
+        // When & Then
+        mockMvc.perform(post("/api/users/purchases/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Arrays.asList(new PurchaseHistory()))))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).createPurchases(anyList());
+    }
+
+    @Test
+    void createPurchases_WhenPurchaseAlreadyExists_ShouldReturnConflict() throws Exception {
+        // Given
+        when(purchaseHistoryService.createPurchases(anyList()))
+                .thenThrow(new RuntimeException("Purchase already exists"));
+
+        // When & Then
+        mockMvc.perform(post("/api/users/purchases/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testPurchases)))
+                .andExpect(status().isConflict());
+
+        verify(purchaseHistoryService, times(1)).createPurchases(anyList());
+    }
+
+    @Test
+    void updatePurchase_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.updatePurchase(anyLong(), any(PurchaseHistory.class)))
+                .thenThrow(new IllegalArgumentException("Invalid purchase data"));
+
+        // When & Then
+        mockMvc.perform(put("/api/users/purchases/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new PurchaseHistory())))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).updatePurchase(anyLong(), any(PurchaseHistory.class));
+    }
+
+    @Test
+    void deletePurchasesByUserId_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.deletePurchasesByUserId(anyLong()))
+                .thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/purchases/user/0"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).deletePurchasesByUserId(0L);
+    }
+
+    @Test
+    void getUserPurchaseStats_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserPurchaseStats(anyLong()))
+                .thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/0/stats"))
+                .andExpect(status().isBadRequest());
+
+        verify(purchaseHistoryService, times(1)).getUserPurchaseStats(0L);
+    }
+
+    @Test
+    void getPurchaseStats_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchaseCount()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/stats"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchaseCount();
     }
 }

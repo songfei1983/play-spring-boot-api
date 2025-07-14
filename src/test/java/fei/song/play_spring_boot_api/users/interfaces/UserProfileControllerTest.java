@@ -386,4 +386,154 @@ class UserProfileControllerTest {
 
         verify(userProfileService, times(1)).deleteProfile(999L);
     }
+
+    @Test
+    void getProfilesByAgeRange_ShouldReturnFilteredProfiles() throws Exception {
+        // Given
+        when(userProfileService.getProfilesByAgeRange(20, 30)).thenReturn(Arrays.asList(testProfile));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/age")
+                        .param("minAge", "20")
+                        .param("maxAge", "30"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].age").value(25));
+
+        verify(userProfileService, times(1)).getProfilesByAgeRange(20, 30);
+    }
+
+    @Test
+    void deleteProfileByUserId_ShouldReturnSuccessResponse() throws Exception {
+        // Given
+        when(userProfileService.deleteProfileByUserId(1L)).thenReturn(true);
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/profiles/user/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("用户档案删除成功"));
+
+        verify(userProfileService, times(1)).deleteProfileByUserId(1L);
+    }
+
+    @Test
+    void getProfileByUserId_WhenNotFound_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.getProfileByUserId(999L)).thenThrow(new RuntimeException("Profile not found"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/user/999"))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).getProfileByUserId(999L);
+    }
+
+    @Test
+    void getProfilesByAgeRange_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(userProfileService.getProfilesByAgeRange(anyInt(), anyInt()))
+                .thenThrow(new IllegalArgumentException("Invalid age range"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/age")
+                        .param("minAge", "-1")
+                        .param("maxAge", "200"))
+                .andExpect(status().isBadRequest());
+
+        verify(userProfileService, times(1)).getProfilesByAgeRange(-1, 200);
+    }
+
+    @Test
+    void getProfilesByOccupation_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(userProfileService.getProfilesByOccupation(anyString()))
+                .thenThrow(new IllegalArgumentException("Invalid occupation"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/occupation/INVALID"))
+                .andExpect(status().isBadRequest());
+
+        verify(userProfileService, times(1)).getProfilesByOccupation("INVALID");
+    }
+
+    @Test
+    void searchProfilesByAddress_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
+        // Given
+        when(userProfileService.searchProfilesByAddress(anyString()))
+                .thenThrow(new IllegalArgumentException("Invalid keyword"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/search")
+                        .param("keyword", ""))
+                .andExpect(status().isBadRequest());
+
+        verify(userProfileService, times(1)).searchProfilesByAddress("");
+    }
+
+    @Test
+    void updateProfileByUserId_WhenProfileNotFound_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.updateProfileByUserId(eq(999L), any(UserProfile.class)))
+                .thenThrow(new RuntimeException("Profile not found"));
+
+        // When & Then
+        mockMvc.perform(put("/api/users/profiles/user/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testProfile)))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).updateProfileByUserId(eq(999L), any(UserProfile.class));
+    }
+
+    @Test
+    void deleteProfileByUserId_WhenProfileNotFound_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.deleteProfileByUserId(999L)).thenThrow(new RuntimeException("Profile not found"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/profiles/user/999"))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).deleteProfileByUserId(999L);
+    }
+
+    @Test
+    void hasProfile_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.hasProfile(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/user/1/exists"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).hasProfile(1L);
+    }
+
+    @Test
+    void getProfileCount_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.getProfileCount()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/count"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).getProfileCount();
+    }
+
+    @Test
+    void getProfileStats_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.getProfileCount()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/stats"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).getProfileCount();
+    }
 }

@@ -214,5 +214,67 @@ class UserControllerTest {
         verify(userService, times(1)).deleteUser(999L);
     }
 
+    @Test
+    void getAllUsers_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userService.getAllUsers()).thenThrow(new RuntimeException("Database error"));
 
+        // When & Then
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userService, times(1)).getAllUsers();
+    }
+
+    @Test
+    void getUserById_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userService.getUserById(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/users/1"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userService, times(1)).getUserById(1L);
+    }
+
+    @Test
+    void createUser_WhenServiceThrowsRuntimeException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userService.createUser(any(User.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testUser)))
+                .andExpect(status().isInternalServerError());
+
+        verify(userService, times(1)).createUser(any(User.class));
+    }
+
+    @Test
+    void updateUser_WhenServiceThrowsRuntimeException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userService.updateUser(eq(1L), any(User.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(put("/users/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testUser)))
+                .andExpect(status().isInternalServerError());
+
+        verify(userService, times(1)).updateUser(eq(1L), any(User.class));
+    }
+
+    @Test
+    void deleteUser_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userService.deleteUser(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(delete("/users/1"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userService, times(1)).deleteUser(1L);
+    }
 }
