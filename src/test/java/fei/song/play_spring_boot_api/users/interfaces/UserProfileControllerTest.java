@@ -461,6 +461,147 @@ class UserProfileControllerTest {
     }
 
     @Test
+    void getProfileById_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.getProfileById(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/1"))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).getProfileById(1L);
+    }
+
+    @Test
+    void getProfileByUserId_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.getProfileByUserId(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/user/1"))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).getProfileByUserId(1L);
+    }
+
+    @Test
+    void getProfilesByGender_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.getProfilesByGender("Male")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/gender/Male"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).getProfilesByGender("Male");
+    }
+
+    @Test
+    void getProfilesByOccupation_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.getProfilesByOccupation("Engineer")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/occupation/Engineer"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).getProfilesByOccupation("Engineer");
+    }
+
+    @Test
+    void searchProfilesByAddress_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.searchProfilesByAddress("Main")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/search")
+                        .param("keyword", "Main"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).searchProfilesByAddress("Main");
+    }
+
+    @Test
+    void createProfile_WhenServiceThrowsRuntimeException_ShouldReturnConflict() throws Exception {
+        // Given
+        when(userProfileService.createProfile(any(UserProfile.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(post("/api/users/profiles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testProfile)))
+                .andExpect(status().isConflict());
+
+        verify(userProfileService, times(1)).createProfile(any(UserProfile.class));
+    }
+
+    @Test
+    void updateProfile_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.updateProfile(eq(1L), any(UserProfile.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(put("/api/users/profiles/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testProfile)))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).updateProfile(eq(1L), any(UserProfile.class));
+    }
+
+    @Test
+    void updateProfileByUserId_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.updateProfileByUserId(eq(1L), any(UserProfile.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(put("/api/users/profiles/user/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testProfile)))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).updateProfileByUserId(eq(1L), any(UserProfile.class));
+    }
+
+    @Test
+    void deleteProfile_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.deleteProfile(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/profiles/1"))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).deleteProfile(1L);
+    }
+
+    @Test
+    void deleteProfileByUserId_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(userProfileService.deleteProfileByUserId(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/profiles/user/1"))
+                .andExpect(status().isNotFound());
+
+        verify(userProfileService, times(1)).deleteProfileByUserId(1L);
+    }
+
+    @Test
+    void getProfilesByAgeRange_WhenServiceThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(userProfileService.getProfilesByAgeRange(20, 30)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/profiles/age")
+                        .param("minAge", "20")
+                        .param("maxAge", "30"))
+                .andExpect(status().isInternalServerError());
+
+        verify(userProfileService, times(1)).getProfilesByAgeRange(20, 30);
+    }
+
+    @Test
     void searchProfilesByAddress_WhenInvalidInput_ShouldReturnBadRequest() throws Exception {
         // Given
         when(userProfileService.searchProfilesByAddress(anyString()))

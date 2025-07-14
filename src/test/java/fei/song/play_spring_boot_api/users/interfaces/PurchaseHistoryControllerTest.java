@@ -873,4 +873,351 @@ class PurchaseHistoryControllerTest {
 
         verify(purchaseHistoryService, times(1)).getPurchaseCount();
     }
+
+    // 新增异常处理测试用例以提高覆盖率
+    @Test
+    void getAllPurchases_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getAllPurchases()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getAllPurchases();
+    }
+
+    @Test
+    void getPurchaseById_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchaseById(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/1"))
+                .andExpect(status().isNotFound());
+
+        verify(purchaseHistoryService, times(1)).getPurchaseById(1L);
+    }
+
+    @Test
+    void getPurchasesByUserId_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByUserId(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByUserId(1L);
+    }
+
+    @Test
+    void getPurchaseByOrderNumber_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchaseByOrderNumber("ORD001")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/order/ORD001"))
+                .andExpect(status().isNotFound());
+
+        verify(purchaseHistoryService, times(1)).getPurchaseByOrderNumber("ORD001");
+    }
+
+    @Test
+    void getPurchasesByProductId_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByProductId("PROD001")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/product/PROD001"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByProductId("PROD001");
+    }
+
+    @Test
+    void getPurchasesByCategory_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByCategory("Electronics")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/category/Electronics"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByCategory("Electronics");
+    }
+
+    @Test
+    void getPurchasesByBrand_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByBrand("TestBrand")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/brand/TestBrand"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByBrand("TestBrand");
+    }
+
+    @Test
+    void getPurchasesByPaymentStatus_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByPaymentStatus("PAID")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/payment-status/PAID"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByPaymentStatus("PAID");
+    }
+
+    @Test
+    void getPurchasesByOrderStatus_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByOrderStatus("DELIVERED")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/order-status/DELIVERED"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByOrderStatus("DELIVERED");
+    }
+
+    @Test
+    void getPurchasesByUserIdAndOrderStatus_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByUserIdAndOrderStatus(1L, "DELIVERED")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/order-status/DELIVERED"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByUserIdAndOrderStatus(1L, "DELIVERED");
+    }
+
+    @Test
+    void getPurchasesByTimeRange_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        LocalDateTime startTime = LocalDateTime.now().minusDays(7);
+        LocalDateTime endTime = LocalDateTime.now();
+        when(purchaseHistoryService.getPurchasesByTimeRange(any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/time-range")
+                        .param("startTime", startTime.toString())
+                        .param("endTime", endTime.toString()))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByTimeRange(any(LocalDateTime.class), any(LocalDateTime.class));
+    }
+
+    @Test
+    void getPurchasesByUserIdAndTimeRange_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        LocalDateTime startTime = LocalDateTime.now().minusDays(7);
+        LocalDateTime endTime = LocalDateTime.now();
+        when(purchaseHistoryService.getPurchasesByUserIdAndTimeRange(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/time-range")
+                        .param("startTime", startTime.toString())
+                        .param("endTime", endTime.toString()))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByUserIdAndTimeRange(eq(1L), any(LocalDateTime.class), any(LocalDateTime.class));
+    }
+
+    @Test
+    void getPurchasesByPriceRange_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByPriceRange(any(BigDecimal.class), any(BigDecimal.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/price-range")
+                        .param("minPrice", "10.00")
+                        .param("maxPrice", "100.00"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByPriceRange(any(BigDecimal.class), any(BigDecimal.class));
+    }
+
+    @Test
+    void getPurchasesByPaymentMethod_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByPaymentMethod("CREDIT_CARD")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/payment-method/CREDIT_CARD"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByPaymentMethod("CREDIT_CARD");
+    }
+
+    @Test
+    void getPurchasesByChannel_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchasesByChannel("ONLINE")).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/channel/ONLINE"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchasesByChannel("ONLINE");
+    }
+
+    @Test
+    void getRecentPurchasesByUserId_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getRecentPurchasesByUserId(1L, 10)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/recent")
+                        .param("limit", "10"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getRecentPurchasesByUserId(1L, 10);
+    }
+
+    @Test
+    void getUserTotalAmount_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserTotalAmount(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/total-amount"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getUserTotalAmount(1L);
+    }
+
+    @Test
+    void getUserPurchaseCount_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserPurchaseCount(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/count"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getUserPurchaseCount(1L);
+    }
+
+    @Test
+    void getUserFavoriteBrand_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserFavoriteBrand(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/favorite-brand"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getUserFavoriteBrand(1L);
+    }
+
+    @Test
+    void createPurchase_WhenServiceThrowsRuntimeException_ShouldReturnConflict() throws Exception {
+        // Given
+        when(purchaseHistoryService.createPurchase(any(PurchaseHistory.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(post("/api/users/purchases")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testPurchase)))
+                .andExpect(status().isConflict());
+
+        verify(purchaseHistoryService, times(1)).createPurchase(any(PurchaseHistory.class));
+    }
+
+    @Test
+    void createPurchases_WhenServiceThrowsRuntimeException_ShouldReturnConflict() throws Exception {
+        // Given
+        when(purchaseHistoryService.createPurchases(anyList())).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(post("/api/users/purchases/batch")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testPurchases)))
+                .andExpect(status().isConflict());
+
+        verify(purchaseHistoryService, times(1)).createPurchases(anyList());
+    }
+
+    @Test
+    void updatePurchase_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(purchaseHistoryService.updatePurchase(eq(1L), any(PurchaseHistory.class))).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(put("/api/users/purchases/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testPurchase)))
+                .andExpect(status().isNotFound());
+
+        verify(purchaseHistoryService, times(1)).updatePurchase(eq(1L), any(PurchaseHistory.class));
+    }
+
+    @Test
+    void deletePurchase_WhenServiceThrowsRuntimeException_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(purchaseHistoryService.deletePurchase(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/purchases/1"))
+                .andExpect(status().isNotFound());
+
+        verify(purchaseHistoryService, times(1)).deletePurchase(1L);
+    }
+
+    @Test
+    void deletePurchasesByUserId_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.deletePurchasesByUserId(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/users/purchases/user/1"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).deletePurchasesByUserId(1L);
+    }
+
+    @Test
+    void getPurchaseCount_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchaseCount()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/count"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchaseCount();
+    }
+
+    @Test
+    void getUserPurchaseStats_WhenServiceThrowsGeneralException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getUserPurchaseStats(1L)).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/user/1/stats"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getUserPurchaseStats(1L);
+    }
+
+    @Test
+    void getPurchaseStats_WhenGetAllPurchasesThrowsException_ShouldReturnInternalServerError() throws Exception {
+        // Given
+        when(purchaseHistoryService.getPurchaseCount()).thenReturn(2L);
+        when(purchaseHistoryService.getAllPurchases()).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then
+        mockMvc.perform(get("/api/users/purchases/stats"))
+                .andExpect(status().isInternalServerError());
+
+        verify(purchaseHistoryService, times(1)).getPurchaseCount();
+        verify(purchaseHistoryService, times(1)).getAllPurchases();
+    }
 }
