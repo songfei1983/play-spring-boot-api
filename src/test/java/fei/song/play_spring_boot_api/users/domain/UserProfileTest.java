@@ -10,12 +10,10 @@ class UserProfileTest {
 
     private UserProfile userProfile;
     private LocalDateTime testTime;
-    private LocalDate testDate;
 
     @BeforeEach
     void setUp() {
         testTime = LocalDateTime.now();
-        testDate = LocalDate.now();
         userProfile = new UserProfile();
     }
 
