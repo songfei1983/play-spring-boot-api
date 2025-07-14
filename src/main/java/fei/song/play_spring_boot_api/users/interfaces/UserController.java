@@ -3,6 +3,11 @@ package fei.song.play_spring_boot_api.users.interfaces;
 import fei.song.play_spring_boot_api.users.domain.User;
 import fei.song.play_spring_boot_api.users.application.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +27,12 @@ public class UserController {
     
     @GetMapping
     @Operation(summary = "获取所有用户", description = "返回系统中所有用户的列表")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<?> getAllUsers() {
         try {
             List<User> users = userService.getAllUsers();
@@ -33,7 +44,16 @@ public class UserController {
     
     @GetMapping("/{id}")
     @Operation(summary = "根据ID获取用户", description = "根据用户ID获取特定用户信息")
-    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户信息",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "404", description = "用户不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<?> getUserById(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             Optional<User> user = userService.getUserById(id);
             return user.map(ResponseEntity::ok)
@@ -45,7 +65,16 @@ public class UserController {
     
     @PostMapping
     @Operation(summary = "创建新用户", description = "创建一个新的用户")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "用户创建成功",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<?> createUser(
+            @Parameter(description = "用户信息", required = true)
+            @RequestBody User user) {
         try {
             User savedUser = userService.createUser(user);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);

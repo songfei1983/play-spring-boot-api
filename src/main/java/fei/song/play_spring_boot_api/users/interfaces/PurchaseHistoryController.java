@@ -2,6 +2,13 @@ package fei.song.play_spring_boot_api.users.interfaces;
 
 import fei.song.play_spring_boot_api.users.application.PurchaseHistoryService;
 import fei.song.play_spring_boot_api.users.domain.PurchaseHistory;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -16,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users/purchases")
 @CrossOrigin(origins = "*")
+@Tag(name = "购买历史", description = "用户购买记录管理")
 public class PurchaseHistoryController {
     
     @Autowired
@@ -25,6 +33,13 @@ public class PurchaseHistoryController {
      * 获取所有购买履历
      */
     @GetMapping
+    @Operation(summary = "获取所有购买记录", description = "返回系统中所有用户购买记录的列表")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取购买记录列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PurchaseHistory.class))),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<PurchaseHistory>> getAllPurchases() {
         try {
             List<PurchaseHistory> purchases = purchaseHistoryService.getAllPurchases();
@@ -38,7 +53,17 @@ public class PurchaseHistoryController {
      * 根据ID获取购买履历
      */
     @GetMapping("/{id}")
-    public ResponseEntity<PurchaseHistory> getPurchaseById(@PathVariable Long id) {
+    @Operation(summary = "根据ID获取购买记录", description = "根据购买记录ID获取特定购买记录信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取购买记录",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PurchaseHistory.class))),
+            @ApiResponse(responseCode = "404", description = "购买记录不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<PurchaseHistory> getPurchaseById(
+            @Parameter(description = "购买记录ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             PurchaseHistory purchase = purchaseHistoryService.getPurchaseById(id);
             return ResponseEntity.ok(purchase);
@@ -53,7 +78,17 @@ public class PurchaseHistoryController {
      * 根据用户ID获取购买履历列表
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<PurchaseHistory>> getPurchasesByUserId(@PathVariable Long userId) {
+    @Operation(summary = "根据用户ID获取购买记录", description = "获取指定用户的所有购买记录")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户购买记录列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PurchaseHistory.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<PurchaseHistory>> getPurchasesByUserId(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             List<PurchaseHistory> purchases = purchaseHistoryService.getPurchasesByUserId(userId);
             return ResponseEntity.ok(purchases);
