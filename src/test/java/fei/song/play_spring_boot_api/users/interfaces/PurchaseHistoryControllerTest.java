@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,7 +29,7 @@ class PurchaseHistoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private PurchaseHistoryService purchaseHistoryService;
 
     @Autowired
@@ -273,9 +273,6 @@ class PurchaseHistoryControllerTest {
 
     @Test
     void getPurchasesByPriceRange_ShouldReturnFilteredPurchases() throws Exception {
-        // Given
-        BigDecimal minPrice = new BigDecimal("50.00");
-        BigDecimal maxPrice = new BigDecimal("150.00");
         when(purchaseHistoryService.getPurchasesByPriceRange(any(BigDecimal.class), any(BigDecimal.class)))
                 .thenReturn(Arrays.asList(testPurchase));
 
