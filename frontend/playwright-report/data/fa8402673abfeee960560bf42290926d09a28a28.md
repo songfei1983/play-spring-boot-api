@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - heading "Spring Boot API 管理系统" [level=1]
+  - navigation:
+    - button "用户管理"
+    - button "用户档案"
+    - button "活动跟踪"
+    - button "购买历史"
+- main:
+  - heading "用户管理" [level=2]
+  - button "添加用户"
+  - heading "添加用户" [level=3]
+  - text: "姓名:"
+  - textbox "姓名:"
+  - text: "邮箱:"
+  - textbox "邮箱:"
+  - button "创建"
+  - button "取消"
+  - table:
+    - rowgroup:
+      - row "ID 姓名 邮箱 操作":
+        - cell "ID"
+        - cell "姓名"
+        - cell "邮箱"
+        - cell "操作"
+    - rowgroup:
+      - row "1 张三 zhangsan@example.com 编辑 删除":
+        - cell "1"
+        - cell "张三"
+        - cell "zhangsan@example.com"
+        - cell "编辑 删除":
+          - button "编辑"
+          - button "删除"
+      - row "2 李四 lisi@example.com 编辑 删除":
+        - cell "2"
+        - cell "李四"
+        - cell "lisi@example.com"
+        - cell "编辑 删除":
+          - button "编辑"
+          - button "删除"
+      - row "3 王五 wangwu@example.com 编辑 删除":
+        - cell "3"
+        - cell "王五"
+        - cell "wangwu@example.com"
+        - cell "编辑 删除":
+          - button "编辑"
+          - button "删除"
+- contentinfo:
+  - paragraph:
+    - text: "API 文档:"
+    - link "Swagger UI":
+      - /url: http://localhost:8080/swagger-ui.html
+```

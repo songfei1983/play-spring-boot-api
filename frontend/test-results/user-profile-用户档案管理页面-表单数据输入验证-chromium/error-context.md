@@ -1,0 +1,98 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - heading "Spring Boot API 管理系统" [level=1]
+  - navigation:
+    - button "用户管理"
+    - button "用户档案"
+    - button "活动跟踪"
+    - button "购买历史"
+- main:
+  - heading "用户档案管理" [level=2]
+  - button "添加用户档案"
+  - textbox "按地址搜索..."
+  - button "搜索"
+  - button "重置"
+  - heading "添加用户档案" [level=3]
+  - text: "用户:"
+  - combobox "用户:":
+    - option "请选择用户" [selected]
+    - option "张三 (zhangsan@example.com)"
+    - option "李四 (lisi@example.com)"
+    - option "王五 (wangwu@example.com)"
+  - text: "年龄:"
+  - spinbutton "年龄:"
+  - text: "性别:"
+  - combobox "性别:":
+    - option "请选择性别" [selected]
+    - option "男"
+    - option "女"
+    - option "其他"
+  - text: "生日:"
+  - textbox "生日:"
+  - text: "地址:"
+  - textbox "地址:"
+  - text: "电话号码:"
+  - textbox "电话号码:"
+  - text: "职业:"
+  - textbox "职业:"
+  - text: "个人简介:"
+  - textbox "个人简介:"
+  - button "创建"
+  - button "取消"
+  - table:
+    - rowgroup:
+      - row "ID 用户 年龄 性别 生日 电话 地址 职业 操作":
+        - cell "ID"
+        - cell "用户"
+        - cell "年龄"
+        - cell "性别"
+        - cell "生日"
+        - cell "电话"
+        - cell "地址"
+        - cell "职业"
+        - cell "操作"
+    - rowgroup:
+      - row "2 李四 - - - 13900139000 上海市浦东新区 - 编辑 删除":
+        - cell "2"
+        - cell "李四"
+        - cell "-"
+        - cell "-"
+        - cell "-"
+        - cell "13900139000"
+        - cell "上海市浦东新区"
+        - cell "-"
+        - cell "编辑 删除":
+          - button "编辑"
+          - button "删除"
+      - row "3 王五 - - - 13700137000 广州市天河区1 - 编辑 删除":
+        - cell "3"
+        - cell "王五"
+        - cell "-"
+        - cell "-"
+        - cell "-"
+        - cell "13700137000"
+        - cell "广州市天河区1"
+        - cell "-"
+        - cell "编辑 删除":
+          - button "编辑"
+          - button "删除"
+      - row "1 张三 25 男 1999-09-09 13800138000 北京市朝阳区 托尔斯泰 编辑 删除":
+        - cell "1"
+        - cell "张三"
+        - cell "25"
+        - cell "男"
+        - cell "1999-09-09"
+        - cell "13800138000"
+        - cell "北京市朝阳区"
+        - cell "托尔斯泰"
+        - cell "编辑 删除":
+          - button "编辑"
+          - button "删除"
+- contentinfo:
+  - paragraph:
+    - text: "API 文档:"
+    - link "Swagger UI":
+      - /url: http://localhost:8080/swagger-ui.html
+```

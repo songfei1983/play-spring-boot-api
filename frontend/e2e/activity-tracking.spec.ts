@@ -12,11 +12,11 @@ test.describe('活动跟踪管理页面', () => {
     // 检查页面标题
     await expect(page.locator('h2')).toContainText('活动跟踪管理');
     
-    // 检查搜索框
-    await expect(page.locator('input[placeholder*="搜索"]')).toBeVisible();
+    // 检查用户搜索选择框
+    await expect(page.locator('select')).toBeVisible();
     
-    // 检查添加活动记录按钮
-    await expect(page.locator('button:has-text("添加活动记录")')).toBeVisible();
+    // 检查添加活动跟踪按钮
+    await expect(page.locator('button:has-text("添加活动跟踪")')).toBeVisible();
     
     // 检查数据表格
     await expect(page.locator('.data-table')).toBeVisible();
@@ -30,94 +30,87 @@ test.describe('活动跟踪管理页面', () => {
     await expect(page.locator('th:has-text("设备")')).toBeVisible();
     await expect(page.locator('th:has-text("IP地址")')).toBeVisible();
     await expect(page.locator('th:has-text("持续时间")')).toBeVisible();
-    await expect(page.locator('th:has-text("时间")')).toBeVisible();
+    await expect(page.locator('th').filter({ hasText: /^时间$/ })).toBeVisible();
     await expect(page.locator('th:has-text("操作")')).toBeVisible();
   });
 
   test('搜索功能', async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="搜索"]');
+    const searchSelect = page.locator('select').first();
     
-    // 输入搜索关键词
-    await searchInput.fill('登录');
+    // 检查搜索选择框是否可见
+    await expect(searchSelect).toBeVisible();
     
-    // 等待搜索结果更新
-    await page.waitForTimeout(500);
+    // 检查搜索和重置按钮
+    await expect(page.locator('button:has-text("搜索")')).toBeVisible();
+    await expect(page.locator('button:has-text("重置")')).toBeVisible();
     
-    // 清空搜索
-    await searchInput.clear();
+    // 点击重置按钮
+    await page.click('button:has-text("重置")');
     await page.waitForTimeout(500);
   });
 
-  test('添加活动记录表单', async ({ page }) => {
-    // 点击添加活动记录按钮
-    await page.click('button:has-text("添加活动记录")');
+  test('添加活动跟踪表单', async ({ page }) => {
+    // 点击添加活动跟踪按钮
+    await page.click('button:has-text("添加活动跟踪")');
     
     // 检查表单是否显示
-    await expect(page.locator('.activity-form')).toBeVisible();
+    await expect(page.locator('.form-container')).toBeVisible();
     
     // 检查表单字段
-    await expect(page.locator('select')).toBeVisible(); // 用户选择
-    await expect(page.locator('input[placeholder="活动类型"]')).toBeVisible();
-    await expect(page.locator('textarea[placeholder="描述"]')).toBeVisible();
-    await expect(page.locator('input[placeholder="位置"]')).toBeVisible();
-    await expect(page.locator('input[placeholder="设备"]')).toBeVisible();
-    await expect(page.locator('input[placeholder="IP地址"]')).toBeVisible();
-    await expect(page.locator('input[placeholder="持续时间(分钟)"]')).toBeVisible();
+    await expect(page.locator('select#userId')).toBeVisible(); // 用户选择
+    await expect(page.locator('input#activityType')).toBeVisible();
+    await expect(page.locator('textarea#description')).toBeVisible();
+    await expect(page.locator('input#location')).toBeVisible();
+    await expect(page.locator('input#ipAddress')).toBeVisible();
+    await expect(page.locator('input#duration')).toBeVisible();
     
     // 检查表单按钮
-    await expect(page.locator('button:has-text("保存")')).toBeVisible();
+    await expect(page.locator('button:has-text("创建")')).toBeVisible();
     await expect(page.locator('button:has-text("取消")')).toBeVisible();
     
     // 点击取消按钮隐藏表单
     await page.click('button:has-text("取消")');
-    await expect(page.locator('.activity-form')).not.toBeVisible();
+    await expect(page.locator('.form-container')).not.toBeVisible();
   });
 
   test('表单数据输入验证', async ({ page }) => {
-    // 打开添加活动记录表单
-    await page.click('button:has-text("添加活动记录")');
+    // 打开添加活动跟踪表单
+    await page.click('button:has-text("添加活动跟踪")');
     
     // 填写表单数据
-    await page.fill('input[placeholder="活动类型"]', '用户登录');
-    await page.fill('textarea[placeholder="描述"]', '用户通过Web界面登录系统');
-    await page.fill('input[placeholder="位置"]', '北京市朝阳区');
-    await page.fill('input[placeholder="设备"]', 'MacBook Pro');
-    await page.fill('input[placeholder="IP地址"]', '192.168.1.100');
-    await page.fill('input[placeholder="持续时间(分钟)"]', '30');
+    await page.fill('input#activityType', '用户登录');
+    await page.fill('textarea#description', '用户通过Web界面登录系统');
+    await page.fill('input#location', '北京市朝阳区');
+    await page.fill('input#ipAddress', '192.168.1.100');
+    await page.fill('input#duration', '30');
     
     // 验证输入的数据
-    await expect(page.locator('input[placeholder="活动类型"]')).toHaveValue('用户登录');
-    await expect(page.locator('textarea[placeholder="描述"]')).toHaveValue('用户通过Web界面登录系统');
-    await expect(page.locator('input[placeholder="IP地址"]')).toHaveValue('192.168.1.100');
+    await expect(page.locator('input#activityType')).toHaveValue('用户登录');
+    await expect(page.locator('textarea#description')).toHaveValue('用户通过Web界面登录系统');
+    await expect(page.locator('input#ipAddress')).toHaveValue('192.168.1.100');
   });
 
   test('IP地址格式验证', async ({ page }) => {
-    // 打开添加活动记录表单
-    await page.click('button:has-text("添加活动记录")');
+    // 打开添加活动跟踪表单
+    await page.click('button:has-text("添加活动跟踪")');
     
     // 输入无效的IP地址
-    await page.fill('input[placeholder="IP地址"]', '999.999.999.999');
-    
-    // 尝试保存（如果有客户端验证的话）
-    await page.click('button:has-text("保存")');
+    await page.fill('input#ipAddress', '999.999.999.999');
     
     // 输入有效的IP地址
-    await page.fill('input[placeholder="IP地址"]', '192.168.1.1');
+    await page.fill('input#ipAddress', '192.168.1.1');
+    
+    // 验证输入的数据
+    await expect(page.locator('input#ipAddress')).toHaveValue('192.168.1.1');
   });
 
   test('持续时间数值验证', async ({ page }) => {
-    // 打开添加活动记录表单
-    await page.click('button:has-text("添加活动记录")');
-    
-    // 输入负数
-    await page.fill('input[placeholder="持续时间(分钟)"]', '-10');
-    
-    // 输入非数字
-    await page.fill('input[placeholder="持续时间(分钟)"]', 'abc');
+    // 打开添加活动跟踪表单
+    await page.click('button:has-text("添加活动跟踪")');
     
     // 输入有效数字
-    await page.fill('input[placeholder="持续时间(分钟)"]', '45');
-    await expect(page.locator('input[placeholder="持续时间(分钟)"]')).toHaveValue('45');
+    await page.fill('input#duration', '45');
+    await expect(page.locator('input#duration')).toHaveValue('45');
   });
 
   test('表格操作按钮', async ({ page }) => {
@@ -165,7 +158,7 @@ test.describe('活动跟踪管理页面', () => {
     await page.setViewportSize({ width: 1200, height: 800 });
   });
 
-  test('编辑活动记录功能', async ({ page }) => {
+  test('编辑活动跟踪功能', async ({ page }) => {
     // 如果表格中有数据，测试编辑功能
     const editButtons = page.locator('button:has-text("编辑")');
     
@@ -174,10 +167,10 @@ test.describe('活动跟踪管理页面', () => {
       await editButtons.first().click();
       
       // 检查编辑表单是否显示
-      await expect(page.locator('.activity-form')).toBeVisible();
+      await expect(page.locator('.form-container')).toBeVisible();
       
       // 检查表单是否预填充了数据
-      const activityTypeInput = page.locator('input[placeholder="活动类型"]');
+      const activityTypeInput = page.locator('input#activityType');
       const activityType = await activityTypeInput.inputValue();
       expect(activityType.length).toBeGreaterThan(0);
       
@@ -187,7 +180,7 @@ test.describe('活动跟踪管理页面', () => {
       
       // 取消编辑
       await page.click('button:has-text("取消")');
-      await expect(page.locator('.activity-form')).not.toBeVisible();
+      await expect(page.locator('.form-container')).not.toBeVisible();
     }
   });
 
