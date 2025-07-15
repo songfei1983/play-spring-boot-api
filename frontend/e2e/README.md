@@ -1,164 +1,95 @@
-# E2E 测试说明
+# E2E Tests
 
-本项目使用 Playwright 进行端到端 (E2E) 测试，确保前端应用的各项功能正常工作。
+This directory contains end-to-end tests using Playwright.
 
-## 测试覆盖范围
+## GitHub Actions Integration
 
-### 1. 应用基础功能 (`app.spec.ts`)
-- 应用正常加载和页面显示
-- 页面导航功能
-- 页面状态持久化
-- 响应式布局检查
+E2E tests are automatically run in GitHub Actions as part of the CI/CD pipeline:
 
-### 2. 用户管理页面 (`user-management.spec.ts`)
-- 页面基本元素显示
-- 搜索功能
-- 添加用户表单
-- 表单验证
-- 表格布局和操作
+### Main CI Pipeline
+- **Trigger**: Push to `master`/`develop` branches or PRs to these branches
+- **Location**: `.github/workflows/ci.yml`
+- **Job**: `e2e-tests`
+- **Dependencies**: Runs after unit tests pass
+- **Artifacts**: Uploads test reports and results
 
-### 3. 用户档案管理页面 (`user-profile.spec.ts`)
-- 页面基本元素显示
-- 搜索功能
-- 添加用户档案表单
-- 数据输入验证（年龄、电话号码等）
-- 性别选择功能
-- 编辑和删除功能
+### Standalone E2E Workflow
+- **Trigger**: Manual dispatch, version tags, or workflow calls
+- **Location**: `.github/workflows/e2e-tests.yml`
+- **Use case**: Independent E2E testing without full CI pipeline
 
-### 4. 活动跟踪管理页面 (`activity-tracking.spec.ts`)
-- 页面基本元素显示
-- 搜索功能
-- 添加活动记录表单
-- IP地址和持续时间验证
-- 表格操作和响应式设计
-- 编辑和删除功能
-
-### 5. 购买历史管理页面 (`purchase-history.spec.ts`)
-- 页面基本元素显示
-- 搜索功能
-- 添加购买记录表单
-- 价格计算功能
-- 表格操作和布局
-- 数据加载和错误处理
-
-## 运行测试
-
-### 前提条件
-
-1. 确保前端开发服务器正在运行：
-   ```bash
-   npm start
-   ```
-
-2. 确保后端服务正在运行（如果测试需要真实数据）
-
-### 测试命令
+## Running Tests Locally
 
 ```bash
-# 运行所有 E2E 测试（无头模式）
+# Install dependencies
+npm install
+
+# Install Playwright browsers
+npx playwright install
+
+# Run tests
 npm run test:e2e
 
-# 运行测试并显示浏览器界面
-npm run test:e2e:headed
-
-# 使用 Playwright UI 模式运行测试
+# Run tests with UI
 npm run test:e2e:ui
 
-# 调试模式运行测试
+# Run tests in headed mode
+npm run test:e2e:headed
+
+# Debug tests
 npm run test:e2e:debug
 
-# 查看测试报告
+# Show test report
 npm run test:e2e:report
 ```
 
-### 运行特定测试文件
+## Test Structure
 
-```bash
-# 只运行应用基础功能测试
-npx playwright test app.spec.ts
+- `app.spec.ts` - Basic application tests
+- `user-management.spec.ts` - User management functionality tests
+- `user-profile.spec.ts` - User profile management tests
+- `activity-tracking.spec.ts` - Activity tracking tests
+- `purchase-history.spec.ts` - Purchase history tests
+- `test-data.ts` - Shared test data and utilities
 
-# 只运行用户管理页面测试
-npx playwright test user-management.spec.ts
+## Configuration
 
-# 只运行购买历史页面测试
-npx playwright test purchase-history.spec.ts
-```
+Playwright configuration is in `playwright.config.ts` in the frontend root directory.
 
-### 运行特定浏览器测试
+## CI/CD Pipeline Flow
 
-```bash
-# 只在 Chrome 中运行测试
-npx playwright test --project=chromium
+1. **Unit Tests** - Java backend tests with multiple JDK versions
+2. **Code Quality** - SonarCloud analysis (parallel with E2E)
+3. **Security Scan** - OWASP dependency check (parallel with E2E)
+4. **E2E Tests** - Full application testing with Playwright
+5. **Docker Build** - Only after all tests pass (main branch only)
 
-# 只在 Firefox 中运行测试
-npx playwright test --project=firefox
+## Test Reports
 
-# 只在 Safari 中运行测试
-npx playwright test --project=webkit
-```
+When tests run in GitHub Actions:
+- **Playwright Report**: Available as `playwright-report` artifact
+- **Test Results**: Available as `test-results` artifact
+- **Retention**: 30 days
 
-## 测试配置
+## Troubleshooting
 
-测试配置位于 `playwright.config.ts` 文件中，包括：
+### Local Development
+- Ensure both backend (port 8080) and frontend (port 3000) are running
+- Check that all dependencies are installed
+- Verify Playwright browsers are installed
 
-- **基础URL**: `http://localhost:3000`
-- **支持的浏览器**: Chrome, Firefox, Safari
-- **并行执行**: 启用
-- **重试机制**: CI 环境下重试 2 次
-- **测试报告**: HTML 格式
-- **自动启动开发服务器**: 是
+### CI/CD Issues
+- Check server startup logs in GitHub Actions
+- Verify health check endpoints are responding
+- Review uploaded artifacts for detailed error information
 
-## 测试最佳实践
+## Test Coverage
 
-1. **测试隔离**: 每个测试用例都是独立的，不依赖其他测试的状态
-2. **等待策略**: 使用适当的等待策略，避免不稳定的测试
-3. **选择器策略**: 优先使用语义化的选择器（文本内容、角色等）
-4. **数据清理**: 测试后清理创建的测试数据
-5. **错误处理**: 测试包含错误场景和边界情况
+Current test suites cover:
+- **User Management**: CRUD operations, form validation, search functionality
+- **User Profile**: Profile creation, editing, validation, responsive design
+- **Activity Tracking**: Activity logging and display
+- **Purchase History**: Transaction history and filtering
+- **Navigation**: Application routing and basic functionality
 
-## 故障排除
-
-### 常见问题
-
-1. **测试超时**
-   - 检查开发服务器是否正在运行
-   - 增加测试超时时间
-   - 检查网络连接
-
-2. **元素未找到**
-   - 检查选择器是否正确
-   - 确认页面是否完全加载
-   - 检查元素是否在视口中
-
-3. **测试不稳定**
-   - 添加适当的等待条件
-   - 检查异步操作是否完成
-   - 使用更稳定的选择器
-
-### 调试技巧
-
-1. 使用 `--headed` 模式查看浏览器行为
-2. 使用 `--debug` 模式逐步执行测试
-3. 在测试中添加 `await page.pause()` 暂停执行
-4. 使用 `page.screenshot()` 截图调试
-5. 查看浏览器控制台日志
-
-## 持续集成
-
-在 CI/CD 环境中运行测试时：
-
-1. 确保安装了所有依赖
-2. 使用无头模式运行测试
-3. 配置适当的超时时间
-4. 保存测试报告和截图
-5. 在测试失败时提供详细的错误信息
-
-## 扩展测试
-
-要添加新的测试用例：
-
-1. 在 `e2e` 目录下创建新的 `.spec.ts` 文件
-2. 遵循现有的测试结构和命名约定
-3. 添加适当的测试描述和断言
-4. 确保测试的独立性和可重复性
-5. 更新本文档说明新增的测试内容
+All tests are designed to run reliably in CI/CD environments with proper setup and teardown procedures.
