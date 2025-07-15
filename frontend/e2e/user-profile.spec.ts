@@ -13,7 +13,7 @@ test.describe('用户档案管理页面', () => {
     await expect(page.locator('h2')).toContainText('用户档案管理');
     
     // 检查搜索框
-    await expect(page.locator('input[placeholder*="搜索"]')).toBeVisible();
+    await expect(page.locator('input[placeholder="按地址搜索..."]')).toBeVisible();
     
     // 检查添加用户档案按钮
     await expect(page.locator('button:has-text("添加用户档案")')).toBeVisible();
@@ -24,25 +24,29 @@ test.describe('用户档案管理页面', () => {
     // 检查表格头部
     await expect(page.locator('th:has-text("ID")')).toBeVisible();
     await expect(page.locator('th:has-text("用户")')).toBeVisible();
-    await expect(page.locator('th:has-text("姓名")')).toBeVisible();
     await expect(page.locator('th:has-text("年龄")')).toBeVisible();
     await expect(page.locator('th:has-text("性别")')).toBeVisible();
+    await expect(page.locator('th:has-text("生日")')).toBeVisible();
     await expect(page.locator('th:has-text("电话")')).toBeVisible();
     await expect(page.locator('th:has-text("地址")')).toBeVisible();
+    await expect(page.locator('th:has-text("职业")')).toBeVisible();
     await expect(page.locator('th:has-text("操作")')).toBeVisible();
   });
 
   test('搜索功能', async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="搜索"]');
+    const searchInput = page.locator('input[placeholder="按地址搜索..."]');
     
     // 输入搜索关键词
-    await searchInput.fill('张三');
+    await searchInput.fill('北京');
+    
+    // 点击搜索按钮
+    await page.click('button:has-text("搜索")');
     
     // 等待搜索结果更新
     await page.waitForTimeout(500);
     
-    // 清空搜索
-    await searchInput.clear();
+    // 点击重置按钮
+    await page.click('button:has-text("重置")');
     await page.waitForTimeout(500);
   });
 
@@ -51,23 +55,25 @@ test.describe('用户档案管理页面', () => {
     await page.click('button:has-text("添加用户档案")');
     
     // 检查表单是否显示
-    await expect(page.locator('.profile-form')).toBeVisible();
+    await expect(page.locator('.form-container')).toBeVisible();
     
     // 检查表单字段
-    await expect(page.locator('select')).toBeVisible(); // 用户选择
-    await expect(page.locator('input[placeholder="姓名"]')).toBeVisible();
-    await expect(page.locator('input[placeholder="年龄"]')).toBeVisible();
-    await expect(page.locator('select[placeholder="性别"], select:has(option[value="male"])')).toBeVisible();
-    await expect(page.locator('input[placeholder="电话"]')).toBeVisible();
-    await expect(page.locator('textarea[placeholder="地址"]')).toBeVisible();
+    await expect(page.locator('select#userId')).toBeVisible(); // 用户选择
+    await expect(page.locator('input#age')).toBeVisible();
+    await expect(page.locator('select#gender')).toBeVisible();
+    await expect(page.locator('input#birthday')).toBeVisible();
+    await expect(page.locator('input#phoneNumber')).toBeVisible();
+    await expect(page.locator('input#address')).toBeVisible();
+    await expect(page.locator('input#occupation')).toBeVisible();
+    await expect(page.locator('textarea#bio')).toBeVisible();
     
     // 检查表单按钮
-    await expect(page.locator('button:has-text("保存")')).toBeVisible();
+    await expect(page.locator('button:has-text("创建")')).toBeVisible();
     await expect(page.locator('button:has-text("取消")')).toBeVisible();
     
     // 点击取消按钮隐藏表单
     await page.click('button:has-text("取消")');
-    await expect(page.locator('.profile-form')).not.toBeVisible();
+    await expect(page.locator('.form-container')).not.toBeVisible();
   });
 
   test('表单数据输入验证', async ({ page }) => {
@@ -75,60 +81,72 @@ test.describe('用户档案管理页面', () => {
     await page.click('button:has-text("添加用户档案")');
     
     // 填写表单数据
-    await page.fill('input[placeholder="姓名"]', '李四');
-    await page.fill('input[placeholder="年龄"]', '28');
+    await page.fill('input#age', '28');
     
     // 选择性别
-    const genderSelect = page.locator('select:has(option[value="male"])');
-    if (await genderSelect.count() > 0) {
-      await genderSelect.selectOption('male');
-    }
+    await page.selectOption('select#gender', '男');
     
-    await page.fill('input[placeholder="电话"]', '13800138000');
-    await page.fill('textarea[placeholder="地址"]', '北京市海淀区中关村大街1号');
+    await page.fill('input#phoneNumber', '13800138000');
+    await page.fill('input#address', '北京市海淀区中关村大街1号');
+    await page.fill('input#occupation', '产品经理');
+    await page.fill('textarea#bio', '专注用户体验设计');
     
     // 验证输入的数据
-    await expect(page.locator('input[placeholder="姓名"]')).toHaveValue('李四');
-    await expect(page.locator('input[placeholder="年龄"]')).toHaveValue('28');
-    await expect(page.locator('input[placeholder="电话"]')).toHaveValue('13800138000');
-    await expect(page.locator('textarea[placeholder="地址"]')).toHaveValue('北京市海淀区中关村大街1号');
+    await expect(page.locator('input#age')).toHaveValue('28');
+    await expect(page.locator('select#gender')).toHaveValue('男');
+    await expect(page.locator('input#phoneNumber')).toHaveValue('13800138000');
+    await expect(page.locator('input#address')).toHaveValue('北京市海淀区中关村大街1号');
+    await expect(page.locator('input#occupation')).toHaveValue('产品经理');
+    await expect(page.locator('textarea#bio')).toHaveValue('专注用户体验设计');
   });
 
   test('年龄数值验证', async ({ page }) => {
     // 打开添加用户档案表单
     await page.click('button:has-text("添加用户档案")');
     
-    // 输入负数年龄
-    await page.fill('input[placeholder="年龄"]', '-5');
-    
-    // 输入过大的年龄
-    await page.fill('input[placeholder="年龄"]', '200');
-    
-    // 输入非数字
-    await page.fill('input[placeholder="年龄"]', 'abc');
+    // 测试年龄输入
+    const ageInput = page.locator('input#age');
     
     // 输入有效年龄
-    await page.fill('input[placeholder="年龄"]', '25');
-    await expect(page.locator('input[placeholder="年龄"]')).toHaveValue('25');
+    await ageInput.fill('25');
+    await expect(ageInput).toHaveValue('25');
+    
+    // 输入无效年龄（负数）
+    await ageInput.fill('-5');
+    // 验证输入值
+    await expect(ageInput).toHaveValue('-5');
+    
+    // 输入无效年龄（过大）
+    await ageInput.fill('200');
+    // 验证输入值
+    await expect(ageInput).toHaveValue('200');
+    
+    // 清空字段
+    await ageInput.fill('');
+    await expect(ageInput).toHaveValue('');
   });
 
   test('电话号码格式验证', async ({ page }) => {
     // 打开添加用户档案表单
     await page.click('button:has-text("添加用户档案")');
     
+    const phoneInput = page.locator('input#phoneNumber');
+    
     // 输入无效的电话号码
-    await page.fill('input[placeholder="电话"]', '123');
+    await phoneInput.fill('123');
+    await expect(phoneInput).toHaveValue('123');
     
     // 输入包含字母的电话号码
-    await page.fill('input[placeholder="电话"]', '138abc38000');
+    await phoneInput.fill('138abc38000');
+    await expect(phoneInput).toHaveValue('138abc38000');
     
     // 输入有效的电话号码
-    await page.fill('input[placeholder="电话"]', '13812345678');
-    await expect(page.locator('input[placeholder="电话"]')).toHaveValue('13812345678');
+    await phoneInput.fill('13812345678');
+    await expect(phoneInput).toHaveValue('13812345678');
     
     // 测试固定电话格式
-    await page.fill('input[placeholder="电话"]', '010-12345678');
-    await expect(page.locator('input[placeholder="电话"]')).toHaveValue('010-12345678');
+    await phoneInput.fill('010-12345678');
+    await expect(phoneInput).toHaveValue('010-12345678');
   });
 
   test('性别选择功能', async ({ page }) => {
@@ -136,17 +154,15 @@ test.describe('用户档案管理页面', () => {
     await page.click('button:has-text("添加用户档案")');
     
     // 检查性别选择器
-    const genderSelect = page.locator('select:has(option[value="male"])');
+    const genderSelect = page.locator('select#gender');
     
-    if (await genderSelect.count() > 0) {
-      // 选择男性
-      await genderSelect.selectOption('male');
-      await expect(genderSelect).toHaveValue('male');
-      
-      // 选择女性
-      await genderSelect.selectOption('female');
-      await expect(genderSelect).toHaveValue('female');
-    }
+    // 选择男性
+    await genderSelect.selectOption('男');
+    await expect(genderSelect).toHaveValue('男');
+    
+    // 选择女性
+    await genderSelect.selectOption('女');
+    await expect(genderSelect).toHaveValue('女');
   });
 
   test('表格操作按钮', async ({ page }) => {
@@ -203,20 +219,21 @@ test.describe('用户档案管理页面', () => {
       await editButtons.first().click();
       
       // 检查编辑表单是否显示
-      await expect(page.locator('.profile-form')).toBeVisible();
+      await expect(page.locator('.form-container')).toBeVisible();
       
-      // 检查表单是否预填充了数据
-      const nameInput = page.locator('input[placeholder="姓名"]');
-      const name = await nameInput.inputValue();
-      expect(name.length).toBeGreaterThan(0);
+      // 检查表单字段
+      const ageInput = page.locator('input#age');
+      const phoneInput = page.locator('input#phoneNumber');
       
       // 修改数据
-      await nameInput.clear();
-      await nameInput.fill('修改后的姓名');
+      await ageInput.fill('35');
+      await phoneInput.fill('13900139000');
       
-      // 取消编辑
-      await page.click('button:has-text("取消")');
-      await expect(page.locator('.profile-form')).not.toBeVisible();
+      // 保存修改
+      await page.click('button:has-text("更新")');
+      
+      // 等待保存完成
+      await page.waitForTimeout(1000);
     }
   });
 
@@ -241,16 +258,31 @@ test.describe('用户档案管理页面', () => {
     // 打开添加用户档案表单
     await page.click('button:has-text("添加用户档案")');
     
-    // 尝试提交空表单
-    await page.click('button:has-text("保存")');
+    // 检查表单字段是否存在和可用
+    await expect(page.locator('select#userId')).toBeVisible();
+    await expect(page.locator('select#gender')).toBeVisible();
+    await expect(page.locator('input#age')).toBeVisible();
     
-    // 检查是否有验证提示（这里假设有客户端验证）
-    // 注意：实际的验证行为取决于具体实现
+    // 检查年龄字段的约束
+    await expect(page.locator('input#age')).toHaveAttribute('min', '1');
+    await expect(page.locator('input#age')).toHaveAttribute('max', '120');
     
-    // 只填写部分必填字段
-    await page.fill('input[placeholder="姓名"]', '测试用户');
+    // 检查用户选择字段是否有required属性
+    await expect(page.locator('select#userId')).toHaveAttribute('required');
     
-    // 再次尝试保存
-    await page.click('button:has-text("保存")');
+    // 填写必填字段
+    // 选择用户（假设有用户选项）
+    const userSelect = page.locator('select#userId');
+    const userOptions = await userSelect.locator('option').count();
+    if (userOptions > 1) {
+      await userSelect.selectOption({ index: 1 });
+    }
+    
+    await page.fill('input#age', '30');
+    await page.selectOption('select#gender', '男');
+    
+    // 验证字段已填写
+    await expect(page.locator('input#age')).toHaveValue('30');
+    await expect(page.locator('select#gender')).toHaveValue('男');
   });
 });
