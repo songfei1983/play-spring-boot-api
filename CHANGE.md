@@ -6,6 +6,44 @@
 
 ### [当前版本] - 2025-07-05
 
+#### 🎨 前端UI优化和用户体验提升
+
+**全屏布局重构**
+- 优化所有管理页面布局，使数据表格填满整个窗口高度
+- 修改 `App.css` 中的 `.main-content`、`.management-container`、`.table-container` 样式
+- 移除不必要的边距、边框和阴影，适配全屏显示
+- 添加 `flex: 1` 和 `overflow: auto` 实现响应式滚动
+
+**组件结构统一**
+- 重构 `UserManagement.tsx` - 添加 `table-container` 包装器和统一的操作按钮布局
+- 重构 `UserProfileManagement.tsx` - 统一表格结构和按钮样式
+- 重构 `ActivityTrackManagement.tsx` - 应用一致的布局模式
+- 重构 `PurchaseHistoryManagement.tsx` - 作为布局标准模板
+
+**操作按钮样式统一**
+- 所有页面使用统一的 `actions-cell` 和 `action-buttons` 类
+- 编辑按钮统一使用 `btn-primary` 样式
+- 删除按钮保持 `btn-danger` 样式
+- 添加 `flex-shrink: 0` 确保固定高度组件不被压缩
+
+**页面状态持久化**
+- 修改 `App.tsx` 添加 localStorage 支持
+- 实现页面刷新后保持当前选中标签页状态
+- 使用 React useEffect Hook 自动保存和恢复页面状态
+- 提升用户体验，避免每次刷新都返回默认页面
+
+**技术改进**
+- 导入 `useEffect` Hook 实现状态管理
+- 使用函数式状态初始化从 localStorage 读取保存的状态
+- 添加状态变化监听器自动保存到浏览器本地存储
+- 兼容所有现代浏览器的 localStorage API
+
+**影响范围**
+- 前端文件: 5个组件文件 + 1个样式文件
+- 新增功能: 页面状态持久化
+- 用户体验: 全屏显示 + 状态保持
+- 代码一致性: 统一的组件结构和样式规范
+
 #### 🧪 新增测试覆盖
 
 **PurchaseHistoryController 单元测试**
