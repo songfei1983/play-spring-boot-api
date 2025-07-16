@@ -8,9 +8,9 @@ const PurchaseHistoryManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<PurchaseHistory>({
-    userId: 0,
+    userId: 1, // 设置默认用户ID
     orderNumber: '',
-    productId: 0,
+    productId: 1, // 设置默认商品ID
     productName: '',
     category: '',
     brand: '',
@@ -109,17 +109,41 @@ const PurchaseHistoryManagement: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // 处理表单数据，将空字符串转换为undefined
+      const processedData = {
+        ...formData,
+        paymentMethod: formData.paymentMethod || undefined,
+        paymentStatus: formData.paymentStatus || undefined,
+        orderStatus: formData.orderStatus || undefined,
+        category: formData.category || undefined,
+        brand: formData.brand || undefined,
+        sku: formData.sku || undefined,
+        deliveryAddress: formData.deliveryAddress || undefined,
+        deliveryMethod: formData.deliveryMethod || undefined,
+        courierCompany: formData.courierCompany || undefined,
+        trackingNumber: formData.trackingNumber || undefined,
+        couponId: formData.couponId || undefined,
+        couponName: formData.couponName || undefined,
+        review: formData.review || undefined,
+        channel: formData.channel || undefined,
+        remarks: formData.remarks || undefined,
+        purchaseTime: formData.purchaseTime || undefined,
+        paymentTime: formData.paymentTime || undefined,
+        shipmentTime: formData.shipmentTime || undefined,
+        completionTime: formData.completionTime || undefined
+      };
+      
       if (editingId) {
-        await purchaseHistoryApi.updatePurchase(editingId, formData);
+        await purchaseHistoryApi.updatePurchase(editingId, processedData);
       } else {
-        await purchaseHistoryApi.createPurchase(formData);
+        await purchaseHistoryApi.createPurchase(processedData);
       }
       setShowForm(false);
       setEditingId(null);
       setFormData({
-        userId: 0,
+        userId: 1,
         orderNumber: '',
-        productId: 0,
+        productId: 1,
         productName: '',
         category: '',
         brand: '',
@@ -158,9 +182,9 @@ const PurchaseHistoryManagement: React.FC = () => {
     setShowForm(false);
     setEditingId(null);
     setFormData({
-      userId: 0,
+      userId: 1,
       orderNumber: '',
-      productId: 0,
+      productId: 1,
       productName: '',
       category: '',
       brand: '',
@@ -233,11 +257,12 @@ const PurchaseHistoryManagement: React.FC = () => {
             />
             <select style={{flex: 1}}>
               <option value="">全部状态</option>
-              <option value="待处理">待处理</option>
-              <option value="处理中">处理中</option>
-              <option value="已发货">已发货</option>
-              <option value="已完成">已完成</option>
+              <option value="待确认">待确认</option>
+              <option value="已确认">已确认</option>
+              <option value="配送中">配送中</option>
+              <option value="已送达">已送达</option>
               <option value="已取消">已取消</option>
+              <option value="已退货">已退货</option>
             </select>
             <select style={{flex: 1}}>
               <option value="">全部渠道</option>
@@ -435,11 +460,12 @@ const PurchaseHistoryManagement: React.FC = () => {
                 onChange={handleInputChange}
               >
                 <option value="">请选择订单状态</option>
-                <option value="待处理">待处理</option>
-                <option value="处理中">处理中</option>
-                <option value="已发货">已发货</option>
-                <option value="已完成">已完成</option>
+                <option value="待确认">待确认</option>
+                <option value="已确认">已确认</option>
+                <option value="配送中">配送中</option>
+                <option value="已送达">已送达</option>
                 <option value="已取消">已取消</option>
+                <option value="已退货">已退货</option>
               </select>
             </div>
             
@@ -676,10 +702,10 @@ const PurchaseHistoryManagement: React.FC = () => {
                      <td>{purchase.paymentMethod}</td>
                      <td>
                        <span className={`status ${
-                         purchase.orderStatus === '已完成' ? 'status-success' :
-                         purchase.orderStatus === '已发货' ? 'status-info' :
-                         purchase.orderStatus === '已付款' ? 'status-warning' :
-                         purchase.orderStatus === '待付款' ? 'status-pending' :
+                         purchase.orderStatus === '已送达' ? 'status-success' :
+                         purchase.orderStatus === '配送中' ? 'status-info' :
+                         purchase.orderStatus === '已确认' ? 'status-warning' :
+                         purchase.orderStatus === '待确认' ? 'status-pending' :
                          'status-error'
                        }`}>
                          {purchase.orderStatus}

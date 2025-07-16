@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logger } from '../utils/logger';
 
 const API_BASE_URL = 'http://localhost:8080';
 
@@ -8,6 +9,55 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// 请求拦截器 - 记录API调用
+api.interceptors.request.use(
+  (config) => {
+    const method = config.method?.toUpperCase() || 'UNKNOWN';
+    const url = config.url || '';
+    const fullUrl = `${config.baseURL}${url}`;
+    
+    logger.apiCall(method, fullUrl, config.data);
+    logger.debug(`Request Headers:`, config.headers);
+    
+    return config;
+  },
+  (error) => {
+    logger.error('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// 响应拦截器 - 记录API响应和错误
+api.interceptors.response.use(
+  (response) => {
+    const method = response.config.method?.toUpperCase() || 'UNKNOWN';
+    const url = response.config.url || '';
+    const fullUrl = `${response.config.baseURL}${url}`;
+    
+    logger.apiResponse(method, fullUrl, {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data
+    });
+    
+    return response;
+  },
+  (error) => {
+    const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+    const url = error.config?.url || '';
+    const fullUrl = error.config ? `${error.config.baseURL}${url}` : 'Unknown URL';
+    
+    logger.apiError(method, fullUrl, {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+    
+    return Promise.reject(error);
+  }
+);
 
 // 用户接口
 export interface User {

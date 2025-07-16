@@ -31,7 +31,7 @@ public class PurchaseHistoryRepository {
         purchase1.setActualPrice(new BigDecimal("8499.00"));
         purchase1.setPaymentMethod("支付宝");
         purchase1.setPaymentStatus("已支付");
-        purchase1.setOrderStatus("已完成");
+        purchase1.setOrderStatus("已送达");
         purchase1.setDeliveryAddress("北京市朝阳区xxx街道xxx号");
         purchase1.setDeliveryMethod("快递");
         purchase1.setCourierCompany("顺丰速运");
@@ -78,7 +78,7 @@ public class PurchaseHistoryRepository {
         purchase3.setActualPrice(new BigDecimal("3598.00"));
         purchase3.setPaymentMethod("银行卡");
         purchase3.setPaymentStatus("已支付");
-        purchase3.setOrderStatus("已完成");
+        purchase3.setOrderStatus("已送达");
         purchase3.setDeliveryAddress("广州市天河区zzz大道zzz号");
         purchase3.setDeliveryMethod("快递");
         purchase3.setCourierCompany("圆通速递");

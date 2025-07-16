@@ -19,7 +19,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_LOG_LEVEL=debug react-scripts start",
+    "start:debug": "REACT_APP_LOG_LEVEL=debug REACT_APP_DEBUG=true react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
