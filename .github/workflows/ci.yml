@@ -227,10 +227,12 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: [test]
-    if: always() && (needs.test.result == 'success')
     timeout-minutes: 60
-    # 只在主分支或PR到主分支时运行E2E测试
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || github.base_ref == 'master' || github.base_ref == 'develop'
+    # 只在主分支或PR到主分支时运行E2E测试，且测试通过
+    if: |
+      (needs.test.result == 'success') &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || 
+       github.base_ref == 'main' || github.base_ref == 'develop')
     
     steps:
     - name: Checkout code
