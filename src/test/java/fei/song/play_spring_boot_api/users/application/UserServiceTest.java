@@ -1,7 +1,7 @@
 package fei.song.play_spring_boot_api.users.application;
 
 import fei.song.play_spring_boot_api.users.domain.User;
-import fei.song.play_spring_boot_api.users.infrastructure.UserRepository;
+import fei.song.play_spring_boot_api.users.infrastructure.UserRepositoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserRepositoryService userRepositoryService;
 
     @InjectMocks
     private UserService userService;
@@ -49,7 +49,7 @@ class UserServiceTest {
     @Test
     void testGetAllUsers() {
         // Given
-        when(userRepository.findAll()).thenReturn(testUsers);
+        when(userRepositoryService.findAll()).thenReturn(testUsers);
 
         // When
         List<User> result = userService.getAllUsers();
@@ -59,13 +59,13 @@ class UserServiceTest {
         assertEquals(2, result.size());
         assertEquals("张三", result.get(0).getName());
         assertEquals("李四", result.get(1).getName());
-        verify(userRepository).findAll();
+        verify(userRepositoryService).findAll();
     }
 
     @Test
     void testGetUserById_Success() {
         // Given
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepositoryService.findById(1L)).thenReturn(Optional.of(testUser));
 
         // When
         Optional<User> result = userService.getUserById(1L);
@@ -74,20 +74,20 @@ class UserServiceTest {
         assertTrue(result.isPresent());
         assertEquals("张三", result.get().getName());
         assertEquals("zhangsan@example.com", result.get().getEmail());
-        verify(userRepository).findById(1L);
+        verify(userRepositoryService).findById(1L);
     }
 
     @Test
     void testGetUserById_NotFound() {
         // Given
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+        when(userRepositoryService.findById(999L)).thenReturn(Optional.empty());
 
         // When
         Optional<User> result = userService.getUserById(999L);
 
         // Then
         assertFalse(result.isPresent());
-        verify(userRepository).findById(999L);
+        verify(userRepositoryService).findById(999L);
     }
 
     @Test
@@ -104,7 +104,7 @@ class UserServiceTest {
                 .email("wangwu@example.com")
                 .build();
 
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userRepositoryService.save(any(User.class))).thenReturn(savedUser);
 
         // When
         User result = userService.createUser(newUser);
@@ -114,7 +114,7 @@ class UserServiceTest {
         assertEquals(3L, result.getId());
         assertEquals("王五", result.getName());
         assertEquals("wangwu@example.com", result.getEmail());
-        verify(userRepository).save(any(User.class));
+        verify(userRepositoryService).save(any(User.class));
     }
 
     @Test
@@ -131,7 +131,7 @@ class UserServiceTest {
                 () -> userService.createUser(invalidUser)
         );
         assertEquals("用户名不能为空", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -148,7 +148,7 @@ class UserServiceTest {
                 () -> userService.createUser(invalidUser)
         );
         assertEquals("用户名不能为空", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -165,7 +165,7 @@ class UserServiceTest {
                 () -> userService.createUser(invalidUser)
         );
         assertEquals("邮箱不能为空", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -182,7 +182,7 @@ class UserServiceTest {
                 () -> userService.createUser(invalidUser)
         );
         assertEquals("邮箱不能为空", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -199,7 +199,7 @@ class UserServiceTest {
                 () -> userService.createUser(invalidUser)
         );
         assertEquals("邮箱格式不正确", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -216,8 +216,8 @@ class UserServiceTest {
                 .email("zhangsan_updated@example.com")
                 .build();
 
-        when(userRepository.existsById(1L)).thenReturn(true);
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userRepositoryService.existsById(1L)).thenReturn(true);
+        when(userRepositoryService.save(any(User.class))).thenReturn(savedUser);
 
         // When
         Optional<User> result = userService.updateUser(1L, updateUser);
@@ -227,8 +227,8 @@ class UserServiceTest {
         assertEquals(1L, result.get().getId());
         assertEquals("张三更新", result.get().getName());
         assertEquals("zhangsan_updated@example.com", result.get().getEmail());
-        verify(userRepository).existsById(1L);
-        verify(userRepository).save(any(User.class));
+        verify(userRepositoryService).existsById(1L);
+        verify(userRepositoryService).save(any(User.class));
     }
 
     @Test
@@ -239,15 +239,15 @@ class UserServiceTest {
                 .email("test@example.com")
                 .build();
 
-        when(userRepository.existsById(999L)).thenReturn(false);
+        when(userRepositoryService.existsById(999L)).thenReturn(false);
 
         // When
         Optional<User> result = userService.updateUser(999L, updateUser);
 
         // Then
         assertFalse(result.isPresent());
-        verify(userRepository).existsById(999L);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService).existsById(999L);
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -258,7 +258,7 @@ class UserServiceTest {
                 .email("test@example.com")
                 .build();
 
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepositoryService.existsById(1L)).thenReturn(true);
 
         // When & Then
         IllegalArgumentException exception = assertThrows(
@@ -266,8 +266,8 @@ class UserServiceTest {
                 () -> userService.updateUser(1L, invalidUser)
         );
         assertEquals("用户名不能为空", exception.getMessage());
-        verify(userRepository).existsById(1L);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService).existsById(1L);
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
@@ -278,7 +278,7 @@ class UserServiceTest {
                 .email("invalid-email")
                 .build();
 
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepositoryService.existsById(1L)).thenReturn(true);
 
         // When & Then
         IllegalArgumentException exception = assertThrows(
@@ -286,61 +286,61 @@ class UserServiceTest {
                 () -> userService.updateUser(1L, invalidUser)
         );
         assertEquals("邮箱格式不正确", exception.getMessage());
-        verify(userRepository).existsById(1L);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepositoryService).existsById(1L);
+        verify(userRepositoryService, never()).save(any(User.class));
     }
 
     @Test
     void testDeleteUser_Success() {
         // Given
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepositoryService.existsById(1L)).thenReturn(true);
 
         // When
         boolean result = userService.deleteUser(1L);
 
         // Then
         assertTrue(result);
-        verify(userRepository).existsById(1L);
-        verify(userRepository).deleteById(1L);
+        verify(userRepositoryService).existsById(1L);
+        verify(userRepositoryService).deleteById(1L);
     }
 
     @Test
     void testDeleteUser_NotFound() {
         // Given
-        when(userRepository.existsById(999L)).thenReturn(false);
+        when(userRepositoryService.existsById(999L)).thenReturn(false);
 
         // When
         boolean result = userService.deleteUser(999L);
 
         // Then
         assertFalse(result);
-        verify(userRepository).existsById(999L);
-        verify(userRepository, never()).deleteById(999L);
+        verify(userRepositoryService).existsById(999L);
+        verify(userRepositoryService, never()).deleteById(999L);
     }
 
     @Test
     void testUserExists_True() {
         // Given
-        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepositoryService.existsById(1L)).thenReturn(true);
 
         // When
         boolean result = userService.userExists(1L);
 
         // Then
         assertTrue(result);
-        verify(userRepository).existsById(1L);
+        verify(userRepositoryService).existsById(1L);
     }
 
     @Test
     void testUserExists_False() {
         // Given
-        when(userRepository.existsById(999L)).thenReturn(false);
+        when(userRepositoryService.existsById(999L)).thenReturn(false);
 
         // When
         boolean result = userService.userExists(999L);
 
         // Then
         assertFalse(result);
-        verify(userRepository).existsById(999L);
+        verify(userRepositoryService).existsById(999L);
     }
 }
