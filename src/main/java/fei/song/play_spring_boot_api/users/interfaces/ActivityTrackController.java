@@ -2,6 +2,13 @@ package fei.song.play_spring_boot_api.users.interfaces;
 
 import fei.song.play_spring_boot_api.users.application.ActivityTrackService;
 import fei.song.play_spring_boot_api.users.domain.ActivityTrack;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -16,6 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users/activities")
 @CrossOrigin(origins = "*")
+@Tag(name = "活动跟踪", description = "用户活动轨迹记录和查询")
 public class ActivityTrackController {
     
     @Autowired
@@ -25,6 +33,13 @@ public class ActivityTrackController {
      * 获取所有行动轨迹
      */
     @GetMapping
+    @Operation(summary = "获取所有活动轨迹", description = "返回系统中所有用户活动轨迹的列表")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<ActivityTrack>> getAllTracks() {
         try {
             List<ActivityTrack> tracks = activityTrackService.getAllActivities();
@@ -38,7 +53,17 @@ public class ActivityTrackController {
      * 根据ID获取行动轨迹
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ActivityTrack> getTrackById(@PathVariable Long id) {
+    @Operation(summary = "根据ID获取活动轨迹", description = "根据轨迹ID获取特定活动轨迹信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "404", description = "活动轨迹不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<ActivityTrack> getTrackById(
+            @Parameter(description = "轨迹ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             ActivityTrack track = activityTrackService.getActivityById(id);
             return ResponseEntity.ok(track);
@@ -53,7 +78,17 @@ public class ActivityTrackController {
      * 根据用户ID获取行动轨迹列表
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ActivityTrack>> getTracksByUserId(@PathVariable Long userId) {
+    @Operation(summary = "根据用户ID获取活动轨迹", description = "获取指定用户的所有活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> getTracksByUserId(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByUserId(userId);
             return ResponseEntity.ok(tracks);

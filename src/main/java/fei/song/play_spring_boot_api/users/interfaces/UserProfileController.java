@@ -2,6 +2,13 @@ package fei.song.play_spring_boot_api.users.interfaces;
 
 import fei.song.play_spring_boot_api.users.application.UserProfileService;
 import fei.song.play_spring_boot_api.users.domain.UserProfile;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users/profiles")
 @CrossOrigin(origins = "*")
+@Tag(name = "用户档案", description = "用户档案信息管理")
 public class UserProfileController {
     
     @Autowired
@@ -22,6 +30,13 @@ public class UserProfileController {
      * 获取所有用户档案
      */
     @GetMapping
+    @Operation(summary = "获取所有用户档案", description = "返回系统中所有用户档案的列表")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<UserProfile>> getAllProfiles() {
         try {
             List<UserProfile> profiles = userProfileService.getAllProfiles();
@@ -35,7 +50,17 @@ public class UserProfileController {
      * 根据ID获取用户档案
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserProfile> getProfileById(@PathVariable Long id) {
+    @Operation(summary = "根据ID获取用户档案", description = "根据档案ID获取特定用户档案信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "404", description = "用户档案不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<UserProfile> getProfileById(
+            @Parameter(description = "档案ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             UserProfile profile = userProfileService.getProfileById(id);
             return ResponseEntity.ok(profile);
@@ -127,7 +152,18 @@ public class UserProfileController {
      * 创建用户档案
      */
     @PostMapping
-    public ResponseEntity<UserProfile> createProfile(@RequestBody UserProfile profile) {
+    @Operation(summary = "创建用户档案", description = "创建一个新的用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "用户档案创建成功",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "409", description = "用户档案已存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<UserProfile> createProfile(
+            @Parameter(description = "用户档案信息", required = true)
+            @RequestBody UserProfile profile) {
         try {
             UserProfile createdProfile = userProfileService.createProfile(profile);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProfile);
