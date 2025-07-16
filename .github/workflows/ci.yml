@@ -110,7 +110,7 @@ jobs:
     needs: test
     # 在非主分支运行快速扫描
     if: |
-      github.ref != 'refs/heads/main' && 
+      github.ref != 'refs/heads/master' && 
       github.ref != 'refs/heads/develop' && 
       !contains(github.event.head_commit.message, '[security]') &&
       !contains(toJSON(github.event.head_commit.modified), 'pom.xml')
@@ -171,7 +171,7 @@ jobs:
     needs: test
     # 只在主分支、开发分支或包含安全相关更改时运行完整扫描
     if: |
-      github.ref == 'refs/heads/main' || 
+      github.ref == 'refs/heads/master' || 
       github.ref == 'refs/heads/develop' || 
       contains(github.event.head_commit.message, '[security]') ||
       contains(toJSON(github.event.head_commit.modified), 'pom.xml')
@@ -231,8 +231,8 @@ jobs:
     # 只在主分支或PR到主分支时运行E2E测试，且测试通过
     if: |
       (needs.test.result == 'success') &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || 
-       github.base_ref == 'main' || github.base_ref == 'develop')
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' || 
+       github.base_ref == 'master' || github.base_ref == 'develop')
     
     steps:
     - name: Checkout code
@@ -315,7 +315,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test]
     if: |
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop') &&
       needs.test.result == 'success'
     
     steps:
