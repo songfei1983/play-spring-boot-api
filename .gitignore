@@ -113,3 +113,19 @@ metals.sbt
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+### Docker ###
+.dockerignore
+docker-compose.override.yml
+.env
+.env.local
+.env.*.local
+
+### Application logs ###
+logs/
+*.log
+application-*.log
+spring.log
+
+### Just ###
+.just/
