@@ -50,5 +50,13 @@
   "devDependencies": {
     "@playwright/test": "^1.54.1",
     "@types/node": "^24.0.14"
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios)/)"
+    ],
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
+    }
   }
 }
