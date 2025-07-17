@@ -63,6 +63,13 @@ test:
     @just test-api
     @just test-frontend
 
+# 运行所有测试 (包含E2E测试)
+test-all:
+    @echo "🧪 运行所有测试 (包含E2E)..."
+    @just test-api
+    @just test-frontend
+    @just test-e2e-with-api
+
 # 运行后端测试
 test-api:
     @echo "📦 运行后端测试..."
@@ -77,6 +84,23 @@ test-frontend:
 test-e2e:
     @echo "🎭 运行端到端测试..."
     cd frontend && npx playwright test
+
+# 启动API服务并运行UI测试
+test-e2e-with-api:
+    @echo "🎭 启动API服务并运行UI测试..."
+    @echo "📦 启动后端 API (端口 8080)..."
+    ./mvnw spring-boot:run > /dev/null 2>&1 &
+    @echo "⏳ 等待API服务启动..."
+    @sleep 15
+    @echo "🏥 检查API服务健康状态..."
+    @until curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; do \
+        echo "⏳ 等待API服务就绪..."; \
+        sleep 2; \
+    done
+    @echo "✅ API服务已就绪，开始运行UI测试..."
+    cd frontend && npx playwright test
+    @echo "🛑 停止API服务..."
+    @pkill -f "spring-boot:run" || true
 
 # 生成测试覆盖率报告
 coverage:
