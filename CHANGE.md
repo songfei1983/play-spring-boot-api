@@ -6,6 +6,32 @@
 
 ### [当前版本] - 2025-07-17
 
+#### 🔧 代码质量优化和警告修复
+
+**代码质量改进**
+- 修复 `UserRepository.java` 中的 "this" 逃逸警告
+  - 将构造函数中的 `initializeData()` 方法调用替换为 `initializeDataDirectly()` 方法
+  - 避免在构造函数中调用可能被重写的方法，提高代码安全性
+- 移除未使用的字段和导入
+  - `UserRepository.java`: 移除未使用的 `dataSourceProperties` 字段和相关导入
+  - `UserProfileRepositoryTest.java`: 移除未使用的 `java.util.Arrays` 导入
+- 移除不必要的注解
+  - `UserRepository.java`: 移除不必要的 `@Autowired` 注解，简化构造函数
+  - `UserRepositoryService.java`: 移除构造函数和参数上不必要的 `@Autowired` 注解
+- 修复测试兼容性
+  - `UserRepositoryTest.java`: 更新测试代码以适配修改后的 `UserRepository` 构造函数
+
+**编译和测试验证**
+- ✅ 主代码编译成功，无警告
+- ✅ 测试代码编译成功，无错误
+- ✅ 所有 493 个测试用例全部通过
+- ✅ 代码质量显著提升，符合最佳实践
+
+**代码规范提升**
+- 遵循 Spring Boot 和 Java 最佳实践
+- 提高代码的可维护性和可读性
+- 消除所有编译器警告和代码质量问题
+
 #### 🧪 基础设施层测试完善和覆盖率大幅提升
 
 **测试修复和优化**

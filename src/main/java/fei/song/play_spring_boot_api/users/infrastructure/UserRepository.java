@@ -1,8 +1,6 @@
 package fei.song.play_spring_boot_api.users.infrastructure;
 
 import fei.song.play_spring_boot_api.users.domain.User;
-import fei.song.play_spring_boot_api.config.DataSourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -15,19 +13,25 @@ import java.util.concurrent.atomic.AtomicLong;
 public class UserRepository {
     private final Map<Long, User> users = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(1);
-    private final DataSourceConfig.DataSourceProperties dataSourceProperties;
     
-    @Autowired
-    public UserRepository(DataSourceConfig.DataSourceProperties dataSourceProperties) {
-        this.dataSourceProperties = dataSourceProperties;
-        initializeData();
+    public UserRepository() {
+        // 直接在构造函数中初始化数据，避免调用可能被重写的方法
+        initializeDataDirectly();
     }
     
-    private void initializeData() {
-        // 初始化一些示例数据
-        save(User.builder().name("张三").email("zhangsan@example.com").build());
-        save(User.builder().name("李四").email("lisi@example.com").build());
-        save(User.builder().name("王五").email("wangwu@example.com").build());
+    private void initializeDataDirectly() {
+        // 直接初始化数据，避免调用save方法
+        User user1 = User.builder().name("张三").email("zhangsan@example.com").build();
+        user1.setId(idGenerator.getAndIncrement());
+        users.put(user1.getId(), user1);
+        
+        User user2 = User.builder().name("李四").email("lisi@example.com").build();
+        user2.setId(idGenerator.getAndIncrement());
+        users.put(user2.getId(), user2);
+        
+        User user3 = User.builder().name("王五").email("wangwu@example.com").build();
+        user3.setId(idGenerator.getAndIncrement());
+        users.put(user3.getId(), user3);
     }
     
     public List<User> findAll() {

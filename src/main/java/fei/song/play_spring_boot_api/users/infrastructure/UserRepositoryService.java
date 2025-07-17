@@ -2,7 +2,6 @@ package fei.song.play_spring_boot_api.users.infrastructure;
 
 import fei.song.play_spring_boot_api.users.domain.User;
 import fei.song.play_spring_boot_api.config.DataSourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,11 +18,10 @@ public class UserRepositoryService {
     private final UserRepository memoryUserRepository;
     private final UserJpaRepository jpaUserRepository;
     
-    @Autowired
     public UserRepositoryService(
             DataSourceConfig.DataSourceProperties dataSourceProperties,
-            @Autowired(required = false) UserRepository memoryUserRepository,
-            @Autowired(required = false) UserJpaRepository jpaUserRepository) {
+            UserRepository memoryUserRepository,
+            UserJpaRepository jpaUserRepository) {
         this.dataSourceProperties = dataSourceProperties;
         this.memoryUserRepository = memoryUserRepository;
         this.jpaUserRepository = jpaUserRepository;

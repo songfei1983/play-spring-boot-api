@@ -1,6 +1,5 @@
 package fei.song.play_spring_boot_api.users.infrastructure;
 
-import fei.song.play_spring_boot_api.config.DataSourceConfig;
 import fei.song.play_spring_boot_api.users.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ class UserRepositoryTest {
     
     @BeforeEach
     void setUp() {
-        userRepository = new UserRepository(null);
+        userRepository = new UserRepository();
     }
     
     @Test
