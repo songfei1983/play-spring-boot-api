@@ -174,6 +174,19 @@
 - **服务状态**: 后端Spring Boot API和前端React应用正常运行
 - **CI问题分析**: 本地测试成功表明代码质量良好，CI失败可能由环境配置或时序问题导致
 
+**Spring Boot 依赖注入修复 - 2025-07-18**
+- 修复应用启动时的 `NoSuchBeanDefinitionException` 错误
+- **问题**: `UserRepositoryService` 构造函数中的可选依赖注入配置不正确
+- **解决方案**:
+  - 将 `UserJpaRepository` 字段从 `final` 改为可变字段
+  - 移除构造函数中的可选参数注入
+  - 添加 `@Autowired(required = false)` 的 setter 方法进行可选依赖注入
+- **技术改进**:
+  - 确保在 JPA 禁用时 (`app.datasource.enable-jpa=false`) 应用正常启动
+  - 保持条件化 Bean 创建的正确性
+  - 提高依赖注入的健壮性和可维护性
+- **验证结果**: 应用成功启动，无依赖注入错误
+
 #### 🧪 新增测试覆盖
 
 **PurchaseHistoryController 单元测试**
