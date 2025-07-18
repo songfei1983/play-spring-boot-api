@@ -1,7 +1,7 @@
 package fei.song.play_spring_boot_api.users.application;
 
 import fei.song.play_spring_boot_api.users.domain.User;
-import fei.song.play_spring_boot_api.users.infrastructure.UserRepository;
+import fei.song.play_spring_boot_api.users.infrastructure.UserRepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +12,14 @@ import java.util.Optional;
 public class UserService {
     
     @Autowired
-    private UserRepository userRepository;
+    private UserRepositoryService userRepositoryService;
     
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepositoryService.findAll();
     }
     
     public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+        return userRepositoryService.findById(id);
     }
     
     public User createUser(User user) {
@@ -34,11 +34,11 @@ public class UserService {
             throw new IllegalArgumentException("邮箱格式不正确");
         }
         
-        return userRepository.save(user);
+        return userRepositoryService.save(user);
     }
     
     public Optional<User> updateUser(Long id, User userDetails) {
-        if (!userRepository.existsById(id)) {
+        if (!userRepositoryService.existsById(id)) {
             return Optional.empty();
         }
         
@@ -54,19 +54,19 @@ public class UserService {
         }
         
         userDetails.setId(id);
-        return Optional.of(userRepository.save(userDetails));
+        return Optional.of(userRepositoryService.save(userDetails));
     }
     
     public boolean deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
+        if (!userRepositoryService.existsById(id)) {
             return false;
         }
-        userRepository.deleteById(id);
+        userRepositoryService.deleteById(id);
         return true;
     }
     
     public boolean userExists(Long id) {
-        return userRepository.existsById(id);
+        return userRepositoryService.existsById(id);
     }
     
     private boolean isValidEmail(String email) {

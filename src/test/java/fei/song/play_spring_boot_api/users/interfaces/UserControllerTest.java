@@ -3,6 +3,7 @@ package fei.song.play_spring_boot_api.users.interfaces;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fei.song.play_spring_boot_api.users.application.UserService;
 import fei.song.play_spring_boot_api.users.domain.User;
+import fei.song.play_spring_boot_api.users.infrastructure.UserRepositoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService userService;
+    
+    @MockitoBean
+    private UserRepositoryService userRepositoryService;
 
     @Autowired
     private ObjectMapper objectMapper;

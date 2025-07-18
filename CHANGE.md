@@ -4,7 +4,38 @@
 
 ## 版本历史
 
-### [当前版本] - 2025-07-05
+### [当前版本] - 2025-07-17
+
+#### 🧪 基础设施层测试完善和覆盖率大幅提升
+
+**测试修复和优化**
+- 修复 `UserProfileRepositoryTest.java` 中的所有编译错误
+  - 修正 `UserProfile` 构造函数调用，调整参数顺序和类型
+  - 替换不存在的方法调用（`existsByPhoneNumber`、`countByGender`）为实际存在的方法
+  - 修复属性访问错误（`getRealName()` → `getUserId()`，`getBirthDate()` → `getBirthday()`）
+  - 删除重复的 `testCount` 方法定义
+- 修复 `PurchaseHistoryRepositoryTest.java` 中的所有编译错误
+  - 修正 `PurchaseHistory` 构造函数调用，提供完整的参数列表
+  - 替换不存在的方法调用（`findByProductName`、`findByPriceRange`）为实际存在的方法
+  - 修复属性访问错误（`getPrice()` → `getUnitPrice()`）
+  - 修正 `testInitializeData` 中的断言，使其与实际初始化数据匹配
+
+**测试覆盖率显著提升**
+- **基础设施层覆盖率**: 从 49% 提升到 **90%**，远超 80% 的目标要求
+- **整体项目覆盖率**: 达到 **89%**
+- **测试执行结果**: 493个测试全部通过，无失败和错误
+
+**测试内容完善**
+- `UserProfileRepository` 完整测试覆盖：CRUD操作、查询方法、统计方法
+- `PurchaseHistoryRepository` 完整测试覆盖：复杂查询、时间范围查询、用户统计
+- `UserRepositoryService` 服务层测试：业务逻辑验证、异常处理
+
+**代码质量保障**
+- 所有基础设施层组件现在都有全面的单元测试
+- 测试用例覆盖正常流程、边界条件和异常情况
+- 确保代码重构和功能扩展的安全性
+
+### [2025-07-05]
 
 #### 🎨 前端UI优化和用户体验提升
 

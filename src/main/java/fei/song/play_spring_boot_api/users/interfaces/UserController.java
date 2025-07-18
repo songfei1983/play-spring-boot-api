@@ -2,6 +2,7 @@ package fei.song.play_spring_boot_api.users.interfaces;
 
 import fei.song.play_spring_boot_api.users.domain.User;
 import fei.song.play_spring_boot_api.users.application.UserService;
+import fei.song.play_spring_boot_api.users.infrastructure.UserRepositoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -24,6 +26,9 @@ public class UserController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private UserRepositoryService userRepositoryService;
     
     @GetMapping
     @Operation(summary = "获取所有用户", description = "返回系统中所有用户的列表")
@@ -106,6 +111,24 @@ public class UserController {
             boolean deleted = userService.deleteUser(id);
             return deleted ? ResponseEntity.noContent().build() 
                           : ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+    
+    @GetMapping("/datasource-info")
+    @Operation(summary = "获取数据源信息", description = "返回当前使用的数据源类型")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取数据源信息"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<?> getDataSourceInfo() {
+        try {
+            String dataSourceType = userRepositoryService.getCurrentDataSourceType();
+            return ResponseEntity.ok(Map.of(
+                "dataSourceType", dataSourceType,
+                "timestamp", java.time.LocalDateTime.now()
+            ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }

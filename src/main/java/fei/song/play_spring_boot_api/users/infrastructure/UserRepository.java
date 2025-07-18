@@ -1,6 +1,9 @@
 package fei.song.play_spring_boot_api.users.infrastructure;
 
 import fei.song.play_spring_boot_api.users.domain.User;
+import fei.song.play_spring_boot_api.config.DataSourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -8,15 +11,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
+@ConditionalOnProperty(name = "app.datasource.enable-jpa", havingValue = "false", matchIfMissing = true)
 public class UserRepository {
     private final Map<Long, User> users = new ConcurrentHashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(1);
+    private final DataSourceConfig.DataSourceProperties dataSourceProperties;
     
-    public UserRepository() {
+    @Autowired
+    public UserRepository(DataSourceConfig.DataSourceProperties dataSourceProperties) {
+        this.dataSourceProperties = dataSourceProperties;
+        initializeData();
+    }
+    
+    private void initializeData() {
         // 初始化一些示例数据
-        save(new User(null, "张三", "zhangsan@example.com"));
-        save(new User(null, "李四", "lisi@example.com"));
-        save(new User(null, "王五", "wangwu@example.com"));
+        save(User.builder().name("张三").email("zhangsan@example.com").build());
+        save(User.builder().name("李四").email("lisi@example.com").build());
+        save(User.builder().name("王五").email("wangwu@example.com").build());
     }
     
     public List<User> findAll() {
@@ -41,5 +52,22 @@ public class UserRepository {
     
     public boolean existsById(Long id) {
         return users.containsKey(id);
+    }
+    
+    public Optional<User> findByEmail(String email) {
+        return users.values().stream()
+                .filter(user -> user.getEmail().equals(email))
+                .findFirst();
+    }
+    
+    public List<User> findByNameContaining(String name) {
+        return users.values().stream()
+                .filter(user -> user.getName().contains(name))
+                .toList();
+    }
+    
+    public boolean existsByEmail(String email) {
+        return users.values().stream()
+                .anyMatch(user -> user.getEmail().equals(email));
     }
 }
