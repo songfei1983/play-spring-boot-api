@@ -3,61 +3,69 @@ import { logger } from '../utils/logger';
 
 const API_BASE_URL = 'http://localhost:8080';
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 请求拦截器 - 记录API调用
-api.interceptors.request.use(
-  (config) => {
-    const method = config.method?.toUpperCase() || 'UNKNOWN';
-    const url = config.url || '';
-    const fullUrl = `${config.baseURL}${url}`;
-    
-    logger.apiCall(method, fullUrl, config.data);
-    logger.debug(`Request Headers:`, config.headers);
-    
-    return config;
-  },
-  (error) => {
-    logger.error('Request Error:', error);
-    return Promise.reject(error);
-  }
-);
+// 初始化拦截器的函数
+export const initializeInterceptors = () => {
+  // 请求拦截器 - 记录API调用
+  api.interceptors.request.use(
+    (config) => {
+      const method = config.method?.toUpperCase() || 'UNKNOWN';
+      const url = config.url || '';
+      const fullUrl = `${config.baseURL}${url}`;
+      
+      logger.apiCall(method, fullUrl, config.data);
+      logger.debug(`Request Headers:`, config.headers);
+      
+      return config;
+    },
+    (error) => {
+      logger.error('Request Error:', error);
+      return Promise.reject(error);
+    }
+  );
 
-// 响应拦截器 - 记录API响应和错误
-api.interceptors.response.use(
-  (response) => {
-    const method = response.config.method?.toUpperCase() || 'UNKNOWN';
-    const url = response.config.url || '';
-    const fullUrl = `${response.config.baseURL}${url}`;
-    
-    logger.apiResponse(method, fullUrl, {
-      status: response.status,
-      statusText: response.statusText,
-      data: response.data
-    });
-    
-    return response;
-  },
-  (error) => {
-    const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
-    const url = error.config?.url || '';
-    const fullUrl = error.config ? `${error.config.baseURL}${url}` : 'Unknown URL';
-    
-    logger.apiError(method, fullUrl, {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data
-    });
-    
-    return Promise.reject(error);
-  }
-);
+  // 响应拦截器 - 记录API响应和错误
+  api.interceptors.response.use(
+    (response) => {
+      const method = response.config.method?.toUpperCase() || 'UNKNOWN';
+      const url = response.config.url || '';
+      const fullUrl = `${response.config.baseURL}${url}`;
+      
+      logger.apiResponse(method, fullUrl, {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data
+      });
+      
+      return response;
+    },
+    (error) => {
+      const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+      const url = error.config?.url || '';
+      const fullUrl = error.config ? `${error.config.baseURL}${url}` : 'Unknown URL';
+      
+      logger.apiError(method, fullUrl, {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+      
+      return Promise.reject(error);
+    }
+  );
+};
+
+// 在非测试环境下初始化拦截器
+if (process.env.NODE_ENV !== 'test') {
+  initializeInterceptors();
+}
 
 // 用户接口
 export interface User {
@@ -236,10 +244,6 @@ export const activityTrackApi = {
   getActivitiesBySession: (sessionId: string) => 
     api.get<ActivityTrack[]>(`/api/users/activities/session/${sessionId}`),
   
-  // 根据页面URL获取轨迹
-  getActivitiesByPageUrl: (pageUrl: string) => 
-    api.get<ActivityTrack[]>(`/api/users/activities/page?pageUrl=${encodeURIComponent(pageUrl)}`),
-  
   // 获取用户最近的活动轨迹
   getRecentActivitiesByUserId: (userId: number, limit: number = 10) => 
     api.get<ActivityTrack[]>(`/api/users/activities/user/${userId}/recent?limit=${limit}`),
@@ -279,25 +283,21 @@ export const purchaseHistoryApi = {
   getPurchasesByBrand: (brand: string) => 
     api.get<PurchaseHistory[]>(`/api/users/purchases/brand/${brand}`),
   
-  // 根据支付方式获取购买记录
-  getPurchasesByPaymentMethod: (paymentMethod: string) => 
-    api.get<PurchaseHistory[]>(`/api/users/purchases/payment/${paymentMethod}`),
+  // 根据支付状态获取购买记录
+  getPurchasesByPaymentStatus: (paymentStatus: string) => 
+    api.get<PurchaseHistory[]>(`/api/users/purchases/payment-status/${paymentStatus}`),
   
   // 根据订单状态获取购买记录
   getPurchasesByOrderStatus: (orderStatus: string) => 
-    api.get<PurchaseHistory[]>(`/api/users/purchases/status/${orderStatus}`),
-  
-  // 根据渠道获取购买记录
-  getPurchasesByChannel: (channel: string) => 
-    api.get<PurchaseHistory[]>(`/api/users/purchases/channel/${channel}`),
+    api.get<PurchaseHistory[]>(`/api/users/purchases/order-status/${orderStatus}`),
   
   // 根据时间范围获取购买记录
   getPurchasesByTimeRange: (startTime: string, endTime: string) => 
     api.get<PurchaseHistory[]>(`/api/users/purchases/time-range?startTime=${startTime}&endTime=${endTime}`),
   
-  // 根据价格范围获取购买记录
-  getPurchasesByPriceRange: (minPrice: number, maxPrice: number) => 
-    api.get<PurchaseHistory[]>(`/api/users/purchases/price-range?minPrice=${minPrice}&maxPrice=${maxPrice}`),
+  // 根据用户ID和时间范围获取购买记录
+  getPurchasesByUserIdAndTimeRange: (userId: number, startTime: string, endTime: string) => 
+    api.get<PurchaseHistory[]>(`/api/users/purchases/user/${userId}/time-range?startTime=${startTime}&endTime=${endTime}`),
   
   // 搜索购买记录
   searchPurchases: (keyword: string) => 
@@ -305,7 +305,11 @@ export const purchaseHistoryApi = {
   
   // 获取购买统计信息
   getPurchaseStats: () => 
-    api.get<any>('/api/users/purchases/stats'),
+    api.get<any>(`/api/users/purchases/stats`),
+  
+  // 获取购买记录数量
+  getPurchaseCount: () => 
+    api.get<any>(`/api/users/purchases/count`),
   
   // 创建购买记录
   createPurchase: (purchase: PurchaseHistory) => 
