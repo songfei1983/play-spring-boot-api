@@ -71,7 +71,7 @@ test-integration:
 
 # 运行前端测试
 test-frontend:
-    cd frontend && npm test
+    cd frontend && npm test -- --watchAll=false --verbose
 
 # 运行E2E测试
 test-e2e:
