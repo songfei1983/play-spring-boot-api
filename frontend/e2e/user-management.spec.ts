@@ -32,9 +32,24 @@ test.describe('用户管理页面', () => {
     // 检查表格容器是否可见
     await expect(page.locator('.table-container')).toBeVisible();
     
+    // 等待加载状态结束（如果存在）
+    await page.waitForFunction(() => {
+      const loadingElement = document.querySelector('.loading');
+      return !loadingElement || !loadingElement.textContent;
+    }, { timeout: 10000 });
+    
+    // 再次等待网络请求完成
+    await page.waitForTimeout(1000);
+    
     // 检查是否显示了用户数据或无数据提示
     const hasData = await page.locator('.data-table tbody tr').count() > 0;
     const hasNoDataMessage = await page.locator('.no-data').isVisible();
+    
+    // 如果既没有数据也没有无数据提示，打印调试信息
+    if (!hasData && !hasNoDataMessage) {
+      console.log('Debug: No data rows found and no "no-data" message visible');
+      console.log('Table container HTML:', await page.locator('.table-container').innerHTML());
+    }
     
     expect(hasData || hasNoDataMessage).toBeTruthy();
   });
