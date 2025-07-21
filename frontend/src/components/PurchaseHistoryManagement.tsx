@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { purchaseHistoryApi, PurchaseHistory } from '../services/api';
+import { selectedPurchaseHistoryApi as purchaseHistoryApi, PurchaseHistory } from '../services/api';
 
 const PurchaseHistoryManagement: React.FC = () => {
   const [purchases, setPurchases] = useState<PurchaseHistory[]>([]);

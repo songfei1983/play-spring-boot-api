@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { userProfileApi, userApi, UserProfile, User } from '../services/api';
+import { selectedUserProfileApi as userProfileApi, selectedUserApi as userApi, UserProfile, User } from '../services/api';
 
 const UserProfileManagement: React.FC = () => {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);

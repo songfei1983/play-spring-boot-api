@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { userApi, User } from '../services/api';
+import { selectedUserApi as userApi, User } from '../services/api';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);

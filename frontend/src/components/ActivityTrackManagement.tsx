@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { activityTrackApi, userApi, ActivityTrack, User } from '../services/api';
+import { selectedActivityTrackApi as activityTrackApi, selectedUserApi as userApi, ActivityTrack, User } from '../services/api';
 
 const ActivityTrackManagement: React.FC = () => {
   const [activities, setActivities] = useState<ActivityTrack[]>([]);

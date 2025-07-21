@@ -1,14 +1,27 @@
 import axios from 'axios';
-import { logger } from '../utils/logger';
+import { config, logger } from '../config/environment';
+import { mockApi } from './mockApi';
 
 const API_BASE_URL = 'http://localhost:8080';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: config.apiBaseUrl || API_BASE_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// 根据环境配置选择使用Mock API还是真实API
+const shouldUseMockApi = config.useMockApi || false;
+
+// 如果使用Mock API，则重写api实例的方法
+if (shouldUseMockApi) {
+  // 这里可以添加Mock API的逻辑
+  logger.info('Using Mock API mode');
+} else {
+  logger.info('Using Real API mode');
+}
 
 // 请求拦截器 - 记录API调用
 api.interceptors.request.use(
@@ -322,5 +335,38 @@ export const purchaseHistoryApi = {
   // 删除购买记录
   deletePurchase: (id: number) => api.delete(`/api/users/purchases/${id}`),
 };
+
+// 根据环境配置选择API实例
+const getApiInstance = () => {
+  if (shouldUseMockApi) {
+    logger.info('API calls will use Mock data');
+    return {
+      userApi: mockApi.userApi,
+      userProfileApi: mockApi.userProfileApi,
+      activityTrackApi: mockApi.activityTrackApi,
+      purchaseHistoryApi: mockApi.purchaseHistoryApi
+    };
+  } else {
+    logger.info('API calls will use Real backend');
+    return {
+      userApi,
+      userProfileApi,
+      activityTrackApi,
+      purchaseHistoryApi
+    };
+  }
+};
+
+// 导出选择的API实例
+const apiInstance = getApiInstance();
+
+export const {
+  userApi: selectedUserApi,
+  userProfileApi: selectedUserProfileApi,
+  activityTrackApi: selectedActivityTrackApi,
+  purchaseHistoryApi: selectedPurchaseHistoryApi
+} = apiInstance;
+
+// 为了向后兼容，也导出原始的API（已在上面单独导出，这里不需要重复）
 
 export default api;
