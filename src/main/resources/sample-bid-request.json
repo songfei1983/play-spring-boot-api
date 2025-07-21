@@ -1,0 +1,239 @@
+{
+  "id": "sample-request-123",
+  "imp": [
+    {
+      "id": "imp-1",
+      "banner": {
+        "w": 300,
+        "h": 250,
+        "format": [
+          {
+            "w": 300,
+            "h": 250
+          },
+          {
+            "w": 320,
+            "h": 240
+          }
+        ],
+        "mimes": ["image/jpeg", "image/png", "image/gif"],
+        "topframe": 1,
+        "expdir": [2, 4],
+        "api": [3, 5]
+      },
+      "displaymanager": "MySSP",
+      "displaymanagerver": "1.0",
+      "instl": 0,
+      "tagid": "tag-123",
+      "bidfloor": 0.5,
+      "bidfloorcur": "USD",
+      "clickbrowser": 0,
+      "secure": 1,
+      "iframebuster": ["vendor1.com", "vendor2.com"],
+      "exp": 3600
+    },
+    {
+      "id": "imp-2",
+      "video": {
+        "mimes": ["video/mp4", "video/webm"],
+        "minduration": 5,
+        "maxduration": 30,
+        "protocols": [2, 3, 5, 6],
+        "w": 640,
+        "h": 480,
+        "startdelay": 0,
+        "placement": 1,
+        "linearity": 1,
+        "skip": 1,
+        "skipmin": 5,
+        "skipafter": 10,
+        "sequence": 1,
+        "battr": [13, 14],
+        "maxextended": 30,
+        "minbitrate": 300,
+        "maxbitrate": 1500,
+        "boxingallowed": 1,
+        "playbackmethod": [1, 3],
+        "playbackend": 1,
+        "delivery": [2],
+        "pos": 1,
+        "companionad": [
+          {
+            "w": 300,
+            "h": 250,
+            "id": "companion-1",
+            "pos": 1,
+            "mimes": ["image/jpeg", "image/png"],
+            "topframe": 1,
+            "expdir": [2, 4],
+            "api": [3, 5]
+          }
+        ],
+        "api": [1, 2],
+        "companiontype": [1, 2]
+      },
+      "displaymanager": "MySSP",
+      "displaymanagerver": "1.0",
+      "instl": 0,
+      "tagid": "video-tag-456",
+      "bidfloor": 1.0,
+      "bidfloorcur": "USD",
+      "clickbrowser": 0,
+      "secure": 1,
+      "exp": 3600
+    }
+  ],
+  "site": {
+    "id": "site-123",
+    "name": "Example Site",
+    "domain": "example.com",
+    "cat": ["IAB1", "IAB2"],
+    "sectioncat": ["IAB1-1"],
+    "pagecat": ["IAB1-1"],
+    "page": "https://example.com/page1",
+    "ref": "https://google.com/search?q=example",
+    "search": "example search",
+    "mobile": 0,
+    "privacypolicy": 1,
+    "publisher": {
+      "id": "pub-123",
+      "name": "Example Publisher",
+      "cat": ["IAB1"],
+      "domain": "publisher.com"
+    },
+    "content": {
+      "id": "content-123",
+      "episode": 1,
+      "title": "Example Content",
+      "series": "Example Series",
+      "season": "Season 1",
+      "artist": "Example Artist",
+      "genre": "Comedy",
+      "album": "Example Album",
+      "isrc": "USRC17607839",
+      "producer": {
+        "id": "producer-123",
+        "name": "Example Producer",
+        "cat": ["IAB1"],
+        "domain": "producer.com"
+      },
+      "url": "https://example.com/content",
+      "cat": ["IAB1-1"],
+      "prodq": 1,
+      "videoquality": 1,
+      "context": 1,
+      "contentrating": "PG-13",
+      "userrating": "4.5",
+      "qagmediarating": 1,
+      "keywords": "comedy,entertainment,funny",
+      "livestream": 0,
+      "sourcerelationship": 1,
+      "len": 1800,
+      "language": "en",
+      "embeddable": 1
+    },
+    "keywords": "entertainment,comedy,video"
+  },
+  "device": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "geo": {
+      "lat": 37.7749,
+      "lon": -122.4194,
+      "type": 1,
+      "accuracy": 100,
+      "lastfix": 1625097600,
+      "ipservice": 3,
+      "country": "USA",
+      "region": "CA",
+      "regionfips104": "06",
+      "metro": "807",
+      "city": "San Francisco",
+      "zip": "94102",
+      "utcoffset": -480
+    },
+    "dnt": 0,
+    "lmt": 0,
+    "ip": "192.168.1.100",
+    "ipv6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+    "devicetype": 2,
+    "make": "Apple",
+    "model": "iPhone",
+    "os": "iOS",
+    "osv": "14.6",
+    "hwv": "iPhone12,1",
+    "h": 812,
+    "w": 375,
+    "ppi": 326,
+    "pxratio": 3.0,
+    "js": 1,
+    "geofetch": 1,
+    "flashver": "0",
+    "language": "en",
+    "carrier": "Verizon",
+    "mccmnc": "310-004",
+    "connectiontype": 2,
+    "ifa": "6D92078A-8246-4BA4-AE5B-76104861E7DC",
+    "didsha1": "AA000DFE74168477C70D291f574D344790E0BB11",
+    "didmd5": "AA003DFE74168477C70D291f574D344790E0BB11",
+    "dpidsha1": "AA002DFE74168477C70D291f574D344790E0BB11",
+    "dpidmd5": "AA001DFE74168477C70D291f574D344790E0BB11",
+    "macsha1": "AA004DFE74168477C70D291f574D344790E0BB11",
+    "macmd5": "AA005DFE74168477C70D291f574D344790E0BB11"
+  },
+  "user": {
+    "id": "user-123",
+    "buyeruid": "buyer-user-456",
+    "yob": 1985,
+    "gender": "M",
+    "keywords": "sports,technology,travel",
+    "customdata": "segment1,segment2",
+    "geo": {
+      "lat": 37.7749,
+      "lon": -122.4194,
+      "type": 2,
+      "accuracy": 1000,
+      "country": "USA",
+      "region": "CA",
+      "city": "San Francisco",
+      "zip": "94102"
+    },
+    "data": [
+      {
+        "id": "data-provider-1",
+        "name": "Example Data Provider",
+        "segment": [
+          {
+            "id": "segment-1",
+            "name": "Tech Enthusiasts",
+            "value": "high_value"
+          },
+          {
+            "id": "segment-2",
+            "name": "Sports Fans",
+            "value": "medium_value"
+          }
+        ]
+      }
+    ]
+  },
+  "test": 0,
+  "at": 2,
+  "tmax": 120,
+  "wseat": ["seat1", "seat2"],
+  "bseat": ["blocked_seat1"],
+  "allimps": 0,
+  "cur": ["USD"],
+  "wlang": ["en"],
+  "bcat": ["IAB7-39", "IAB8-18", "IAB8-5"],
+  "badv": ["competitor1.com", "competitor2.com"],
+  "bapp": ["com.competitor.app1", "com.competitor.app2"],
+  "source": {
+    "fd": 1,
+    "tid": "transaction-123",
+    "pchain": "tag1:reseller1/tag2:reseller2"
+  },
+  "regs": {
+    "coppa": 0,
+    "gdpr": 1
+  }
+}
