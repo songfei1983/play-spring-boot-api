@@ -1,0 +1,135 @@
+# OpenRTB 专用配置文件
+# 使用方式: --spring.profiles.active=openrtb
+
+spring:
+  application:
+    name: openrtb-bid-server
+  
+  data:
+    # MongoDB 配置
+    mongodb:
+      uri: mongodb://admin:password123@localhost:27017/openrtb?authSource=admin
+      database: openrtb
+      auto-index-creation: true
+      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
+  
+    # Redis 配置
+    redis:
+      host: localhost
+      port: 6379
+      password: redis123
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 2000ms
+        shutdown-timeout: 100ms
+  
+  # 缓存配置
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5分钟默认TTL
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "openrtb:"
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain,text/html
+  http2:
+    enabled: true
+
+# OpenRTB 业务配置
+openrtb:
+  # 竞价超时配置 (毫秒)
+  bid:
+    timeout: 100
+    max-timeout: 500
+  
+  # 数据保留策略
+  data-retention:
+    bid-requests: 7d      # 竞价请求保留7天
+    bid-responses: 7d     # 竞价响应保留7天
+    user-profiles: 30d    # 用户画像保留30天
+    statistics: 90d       # 统计数据保留90天
+  
+  # 缓存策略
+  cache:
+    campaigns:
+      ttl: 300s           # 活动缓存5分钟
+      max-size: 10000
+    user-profiles:
+      ttl: 1800s          # 用户画像缓存30分钟
+      max-size: 50000
+    inventory:
+      ttl: 600s           # 广告位缓存10分钟
+      max-size: 20000
+  
+  # 性能配置
+  performance:
+    async-pool-size: 50
+    max-concurrent-requests: 1000
+    request-queue-size: 5000
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,mongodb,redis
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  health:
+    mongo:
+      enabled: true
+    redis:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.9,0.95,0.99
+
+# 日志配置
+logging:
+  level:
+    fei.song.play_spring_boot_api: INFO
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.mongodb.driver: WARN
+    io.lettuce.core: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/openrtb-bid-server.log
+    max-size: 100MB
+    max-history: 30
+
+# 自定义配置验证
+app:
+  openrtb:
+    enabled: true
+    version: "2.5"
+    supported-currencies:
+      - USD
+      - EUR
+      - CNY
+    max-bid-floor: 100.0
+    min-bid-floor: 0.01
+    default-bid-floor: 0.1
