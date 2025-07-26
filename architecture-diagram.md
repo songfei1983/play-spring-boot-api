@@ -78,6 +78,12 @@ flowchart TD
             CS["CampaignService"]
             BRMS["BidRequestMetricsService"]
         end
+        
+        subgraph "Data Services"
+            direction TB
+            ORDS["OpenRTBDataService"]
+            URS["UserRepositoryService"]
+        end
     end
     
     %% 领域层
@@ -140,12 +146,6 @@ flowchart TD
             IR["InventoryRepository"]
             BSR["BidStatisticsRepository"]
             BRMR["BidRequestMetricsRepository"]
-        end
-        
-        subgraph "Data Services"
-            direction TB
-            ORDS["OpenRTBDataService"]
-            URS["UserRepositoryService"]
         end
     end
     
