@@ -2,7 +2,6 @@ package fei.song.play_spring_boot_api.ads.service;
 
 import fei.song.play_spring_boot_api.ads.domain.model.BidRequest;
 import fei.song.play_spring_boot_api.ads.domain.model.Device;
-import fei.song.play_spring_boot_api.ads.domain.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

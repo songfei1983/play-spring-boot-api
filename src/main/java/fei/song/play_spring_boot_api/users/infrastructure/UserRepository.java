@@ -2,7 +2,6 @@ package fei.song.play_spring_boot_api.users.infrastructure;
 
 import fei.song.play_spring_boot_api.users.domain.User;
 import fei.song.play_spring_boot_api.config.DataSourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +16,6 @@ public class UserRepository {
     private final AtomicLong idGenerator = new AtomicLong(1);
     private final DataSourceConfig.DataSourceProperties dataSourceProperties;
     
-    @Autowired
     public UserRepository(DataSourceConfig.DataSourceProperties dataSourceProperties) {
         this.dataSourceProperties = dataSourceProperties;
         initializeData();

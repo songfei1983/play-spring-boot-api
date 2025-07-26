@@ -14,7 +14,6 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 广告位库存实体类

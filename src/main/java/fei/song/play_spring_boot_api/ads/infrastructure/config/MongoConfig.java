@@ -2,6 +2,9 @@ package fei.song.play_spring_boot_api.ads.infrastructure.config;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+
+import org.springframework.lang.NonNull;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,11 +32,13 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     private String mongoUri;
 
     @Override
+    @NonNull
     protected String getDatabaseName() {
         return databaseName;
     }
 
     @Override
+    @NonNull
     public MongoClient mongoClient() {
         return MongoClients.create(mongoUri);
     }
@@ -56,6 +61,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
      * 自定义转换器配置
      */
     @Bean
+    @NonNull
     public MongoCustomConversions customConversions() {
         return new MongoCustomConversions(Collections.emptyList());
     }
