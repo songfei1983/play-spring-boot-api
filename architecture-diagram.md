@@ -5,65 +5,69 @@
 ## 整体系统架构
 
 ```mermaid
-graph TB
-    %% 外部系统
-    Client["客户端/前端应用"]
-    ADX["Ad Exchange/SSP"]
-    DSP["DSP平台"]
+flowchart TD
+    %% 外部系统层
+    subgraph "External Systems"
+        direction LR
+        Client["客户端/前端应用"]
+        ADX["Ad Exchange/SSP"]
+        DSP["DSP平台"]
+    end
     
     %% API网关层
     subgraph "API Gateway Layer"
+        direction LR
         NGINX["Nginx (Port 80)"]
         API["Spring Boot API (Port 8080)"]
     end
     
-    %% 应用层
-    subgraph "Application Layer"
-        direction TB
+    %% 应用层（控制器）
+    subgraph "Application Layer - Controllers"
+        direction LR
         
-        %% 用户管理模块
-        subgraph "Users Module"
+        subgraph "User Controllers"
+            direction TB
             UC["UserController"]
             UPC["UserProfileController"]
             ATC["ActivityTrackController"]
             PHC["PurchaseHistoryController"]
         end
         
-        %% 用户画像和分段模块
-        subgraph "User Segmentation Module"
+        subgraph "Segmentation Controllers"
+            direction TB
             UPFC["UserProfileController (MongoDB)"]
             USC["UserSegmentController"]
             USMC["UserSegmentMappingController"]
         end
         
-        %% 广告竞价模块
-        subgraph "Ads Module"
+        subgraph "Ads Controllers"
+            direction TB
             BC["BidController"]
         end
     end
     
     %% 服务层
     subgraph "Service Layer"
-        direction TB
+        direction LR
         
-        %% 用户服务
         subgraph "User Services"
+            direction TB
             US["UserService"]
             UPS["UserProfileService"]
             ATS["ActivityTrackService"]
             PHS["PurchaseHistoryService"]
         end
         
-        %% 用户画像和分段服务
-        subgraph "User Segmentation Services"
+        subgraph "Segmentation Services"
+            direction TB
             UPFS["UserProfileService (MongoDB)"]
             USS["UserSegmentService"]
             USMS["UserSegmentMappingService"]
             SFS["SegmentFilterService"]
         end
         
-        %% 广告服务
         subgraph "Ad Services"
+            direction TB
             BS["BidServer"]
             BA["BiddingAlgorithm"]
             ASF["AdSlotFilterService"]
@@ -75,26 +79,26 @@ graph TB
     
     %% 领域层
     subgraph "Domain Layer"
-        direction TB
+        direction LR
         
-        %% 用户领域模型
         subgraph "User Domain"
+            direction TB
             UD["User"]
             UPD["UserProfile"]
             ATD["ActivityTrack"]
             PHD["PurchaseHistory"]
         end
         
-        %% 用户画像和分段领域模型
-        subgraph "User Segmentation Domain"
+        subgraph "Segmentation Domain"
+            direction TB
             UPFD["UserProfileEntity (MongoDB)"]
             USD["UserSegmentEntity"]
             USMD["UserSegmentMappingEntity"]
             SRD["SegmentRule"]
         end
         
-        %% 广告领域模型
         subgraph "Ads Domain"
+            direction TB
             BR["BidRequest"]
             BRE["BidResponse"]
             IMP["Impression"]
@@ -106,25 +110,25 @@ graph TB
     
     %% 基础设施层
     subgraph "Infrastructure Layer"
-        direction TB
+        direction LR
         
-        %% 用户数据访问
         subgraph "User Repositories"
+            direction TB
             UR["UserRepository"]
             UPR["UserProfileRepository"]
             ATR["ActivityTrackRepository"]
             PHR["PurchaseHistoryRepository"]
         end
         
-        %% 用户画像和分段数据访问
-        subgraph "User Segmentation Repositories"
+        subgraph "Segmentation Repositories"
+            direction TB
             UPFR["UserProfileRepository (MongoDB)"]
             USR_SEG["UserSegmentRepository"]
             USMR["UserSegmentMappingRepository"]
         end
         
-        %% 广告数据访问
         subgraph "Ads Repositories"
+            direction TB
             BRR["BidRequestRepository"]
             BRRE["BidResponseRepository"]
             CR["CampaignRepository"]
@@ -132,8 +136,8 @@ graph TB
             BSR["BidStatisticsRepository"]
         end
         
-        %% 数据服务
         subgraph "Data Services"
+            direction TB
             ORDS["OpenRTBDataService"]
             URS["UserRepositoryService"]
         end
@@ -141,12 +145,14 @@ graph TB
     
     %% 数据库层
     subgraph "Database Layer"
-        MONGO[("MongoDB\n(OpenRTB Data)")]
+        direction LR
+        MONGO[("MongoDB\n(OpenRTB & Segments)")]
         H2[("H2 Database\n(User Data)")]
     end
     
-    %% 配置和工具
+    %% 配置和工具层
     subgraph "Configuration & Utils"
+        direction LR
         CONFIG["Configuration"]
         SCHEDULER["BudgetCleanupScheduler"]
         ASPECT["UserAccessLogAspect"]
@@ -315,17 +321,19 @@ sequenceDiagram
 ## 数据流架构
 
 ```mermaid
-flowchart LR
-    %% 数据输入
-    subgraph "Data Input"
+flowchart TD
+    %% 数据输入层
+    subgraph "Data Input Layer"
+        direction LR
         BR["Bid Requests"]
         UA["User Activities"]
         PH["Purchase History"]
         UD["User Data"]
     end
     
-    %% 数据处理
-    subgraph "Data Processing"
+    %% 数据处理层
+    subgraph "Data Processing Layer"
+        direction LR
         RT["Real-time Processing"]
         BATCH["Batch Processing"]
         ML["Machine Learning"]
@@ -333,42 +341,49 @@ flowchart LR
         PROFILE["Profile Enhancement"]
     end
     
-    %% 数据存储
-    subgraph "Data Storage"
+    %% 数据存储层
+    subgraph "Data Storage Layer"
+        direction LR
         MONGO_RT[("MongoDB\n(OpenRTB & Segments)")]
         H2_USER[("H2\n(User Data)")]
         CACHE["Redis Cache"]
     end
     
-    %% 数据输出
-    subgraph "Data Output"
+    %% 数据输出层
+    subgraph "Data Output Layer"
+        direction LR
         API_RESP["API Responses"]
         ANALYTICS["Analytics"]
         REPORTS["Reports"]
         SEGMENTS["User Segments"]
     end
     
+    %% 数据流向
     BR --> RT
     UA --> BATCH
     PH --> BATCH
-    UD --> BATCH
+    UD --> PROFILE
     
     RT --> MONGO_RT
     BATCH --> H2_USER
-    
-    %% H2到MongoDB的数据转存流程
-    H2_USER --> PROFILE
     PROFILE --> SEGMENT
     SEGMENT --> MONGO_RT
     
+    %% H2到MongoDB的数据转存流程
+    H2_USER --> PROFILE
+    
+    %% 缓存层连接
     MONGO_RT --> CACHE
     H2_USER --> CACHE
     
+    %% 输出层连接
     CACHE --> API_RESP
-    MONGO_RT --> ANALYTICS
+    MONGO_RT --> API_RESP
+    H2_USER --> ANALYTICS
     H2_USER --> REPORTS
     MONGO_RT --> SEGMENTS
     
+    %% 机器学习连接
     ML --> CACHE
     MONGO_RT --> ML
     H2_USER --> ML
