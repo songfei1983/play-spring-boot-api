@@ -244,6 +244,7 @@ graph TB
             ASF["AdSlotFilterService"]
             FDS["FraudDetectionService"]
             BUS["BudgetService"]
+            CS["CampaignService"]
         end
     end
     
@@ -266,6 +267,11 @@ graph TB
             CR["CampaignRepository"]
             IR["InventoryRepository"]
             BSR["BidStatisticsRepository"]
+        end
+        
+        %% 数据服务
+        subgraph "Data Services"
+            ORDS["OpenRTBDataService"]
         end
     end
     
@@ -303,6 +309,18 @@ graph TB
     BS --> FDS
     BS --> BUS
     
+    BA --> CS
+    BUS --> CS
+    ASF --> CR
+    FDS --> BSR
+    
+    CS --> ORDS
+    ORDS --> BRR
+    ORDS --> BRRE
+    ORDS --> CR
+    ORDS --> IR
+    ORDS --> BSR
+    
     UR --> H2
     UPR --> H2
     ATR --> H2
@@ -321,7 +339,7 @@ graph TB
     classDef external fill:#f5f5f5
     
     class UC,UPC,ATC,PHC,BC controller
-    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS service
+    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS,CS,ORDS service
     class UR,UPR,ATR,PHR,BRR,BRRE,CR,IR,BSR repository
     class MONGO,H2 database
     class Client,ADX,DSP,NGINX external
@@ -340,6 +358,8 @@ sequenceDiagram
     participant FDS as FraudDetectionService
     participant BA as BiddingAlgorithm
     participant BUS as BudgetService
+    participant CS as CampaignService
+    participant ORDS as OpenRTBDataService
     participant MONGO as MongoDB
     
     ADX->>BC: Bid Request (OpenRTB)
@@ -356,13 +376,21 @@ sequenceDiagram
     FDS-->>BS: Fraud Score
     
     BS->>BA: Calculate Bid Price
-    BA->>MONGO: Get Historical Data
-    MONGO-->>BA: Bidding History
+    BA->>CS: Get Campaign Data
+    CS->>ORDS: Query Campaign Info
+    ORDS->>MONGO: Get Campaign Data
+    MONGO-->>ORDS: Campaign Info
+    ORDS-->>CS: Campaign Data
+    CS-->>BA: Campaign Info
     BA-->>BS: Bid Price
     
     BS->>BUS: Check Budget
-    BUS->>MONGO: Query Budget Status
-    MONGO-->>BUS: Budget Info
+    BUS->>CS: Get Campaign Budget
+    CS->>ORDS: Query Budget Info
+    ORDS->>MONGO: Get Budget Data
+    MONGO-->>ORDS: Budget Info
+    ORDS-->>CS: Budget Data
+    CS-->>BUS: Budget Info
     BUS-->>BS: Budget Approval
     
     BS->>MONGO: Store Bid Response

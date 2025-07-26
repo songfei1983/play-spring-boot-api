@@ -54,6 +54,7 @@ graph TB
             ASF["AdSlotFilterService"]
             FDS["FraudDetectionService"]
             BUS["BudgetService"]
+            CS["CampaignService"]
         end
     end
     
@@ -149,10 +150,16 @@ graph TB
     BS --> FDS
     BS --> BUS
     
-    BA --> BRR
+    BA --> CS
     ASF --> CR
     FDS --> BSR
-    BUS --> IR
+    BUS --> CS
+    
+    CS --> ORDS
+    ORDS --> BRR
+    ORDS --> CR
+    ORDS --> IR
+    ORDS --> BSR
     
     UR --> H2
     UPR --> H2
@@ -197,6 +204,8 @@ sequenceDiagram
     participant FDS as FraudDetectionService
     participant BA as BiddingAlgorithm
     participant BUS as BudgetService
+    participant CS as CampaignService
+    participant ORDS as OpenRTBDataService
     participant MONGO as MongoDB
     
     ADX->>BC: Bid Request (OpenRTB)
@@ -213,13 +222,21 @@ sequenceDiagram
     FDS-->>BS: Fraud Score
     
     BS->>BA: Calculate Bid Price
-    BA->>MONGO: Get Historical Data
-    MONGO-->>BA: Bidding History
+    BA->>CS: Get Campaign Data
+    CS->>ORDS: Query Campaign Info
+    ORDS->>MONGO: Get Campaign Data
+    MONGO-->>ORDS: Campaign Info
+    ORDS-->>CS: Campaign Data
+    CS-->>BA: Campaign Info
     BA-->>BS: Bid Price
     
     BS->>BUS: Check Budget
-    BUS->>MONGO: Query Budget Status
-    MONGO-->>BUS: Budget Info
+    BUS->>CS: Get Campaign Budget
+    CS->>ORDS: Query Budget Info
+    ORDS->>MONGO: Get Budget Data
+    MONGO-->>ORDS: Budget Info
+    ORDS-->>CS: Budget Data
+    CS-->>BUS: Budget Info
     BUS-->>BS: Budget Approval
     
     BS->>MONGO: Store Bid Response
@@ -389,7 +406,7 @@ graph TB
 
 ### 2. 模块化设计
 - **用户模块**: 处理用户管理、画像、活动跟踪
-- **广告模块**: 处理OpenRTB竞价、预算控制、反欺诈
+- **广告模块**: 处理OpenRTB竞价、预算控制、反欺诈、广告活动管理
 
 ### 3. 微服务就绪
 - 清晰的模块边界
