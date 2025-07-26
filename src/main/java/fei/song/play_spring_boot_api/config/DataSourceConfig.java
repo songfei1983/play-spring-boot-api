@@ -14,7 +14,8 @@ public class DataSourceConfig {
         MEMORY,  // 内存数据源（当前实现）
         H2,      // H2数据库
         MYSQL,   // MySQL数据库
-        POSTGRESQL // PostgreSQL数据库
+        POSTGRESQL, // PostgreSQL数据库
+        MONGODB  // MongoDB数据库
     }
     
     @Bean

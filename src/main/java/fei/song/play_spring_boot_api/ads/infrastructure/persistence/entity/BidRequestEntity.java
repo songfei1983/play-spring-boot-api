@@ -79,7 +79,7 @@ public class BidRequestEntity {
     /**
      * 过期时间(TTL)
      */
-    @Indexed(expireAfterSeconds = 0)
+    @Indexed(expireAfter = "0s")
     @Field("expires_at")
     private LocalDateTime expiresAt;
 

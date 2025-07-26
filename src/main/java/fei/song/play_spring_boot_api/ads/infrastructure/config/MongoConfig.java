@@ -1,11 +1,13 @@
 package fei.song.play_spring_boot_api.ads.infrastructure.config;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-
-import org.springframework.lang.NonNull;
-
-import org.springframework.beans.factory.annotation.Value;
+import com.mongodb.connection.ConnectionPoolSettings;
+import fei.song.play_spring_boot_api.config.MongoProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -15,32 +17,45 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.lang.NonNull;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * MongoDB 配置类
  */
 @Configuration
 @EnableMongoRepositories(basePackages = "fei.song.play_spring_boot_api.ads.infrastructure.repository")
+@ConditionalOnProperty(name = "mongo.enabled", havingValue = "true", matchIfMissing = true)
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
-    @Value("${spring.data.mongodb.database:openrtb}")
-    private String databaseName;
-
-    @Value("${spring.data.mongodb.uri:mongodb://localhost:27017}")
-    private String mongoUri;
+    @Autowired
+    private MongoProperties mongoProperties;
 
     @Override
     @NonNull
     protected String getDatabaseName() {
-        return databaseName;
+        return mongoProperties.getDatabase();
     }
 
     @Override
     @NonNull
     public MongoClient mongoClient() {
-        return MongoClients.create(mongoUri);
+        ConnectionPoolSettings poolSettings = ConnectionPoolSettings.builder()
+                 .maxSize(mongoProperties.getConnectionPool().getMaxSize())
+                 .minSize(mongoProperties.getConnectionPool().getMinSize())
+                 .maxWaitTime(mongoProperties.getConnectionPool().getMaxWaitTimeSeconds(), TimeUnit.SECONDS)
+                 .maxConnectionIdleTime(mongoProperties.getConnectionPool().getMaxConnectionIdleTimeSeconds(), TimeUnit.SECONDS)
+                 .maxConnectionLifeTime(mongoProperties.getConnectionPool().getMaxConnectionLifeTimeSeconds(), TimeUnit.SECONDS)
+                 .build();
+
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(mongoProperties.getUri()))
+                .applyToConnectionPoolSettings(builder -> builder.applySettings(poolSettings))
+                .build();
+
+        return MongoClients.create(settings);
     }
 
     /**
