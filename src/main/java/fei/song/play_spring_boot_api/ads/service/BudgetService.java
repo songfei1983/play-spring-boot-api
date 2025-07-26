@@ -1,10 +1,12 @@
 package fei.song.play_spring_boot_api.ads.service;
 
 import fei.song.play_spring_boot_api.ads.config.AdsConfiguration;
+import fei.song.play_spring_boot_api.ads.infrastructure.persistence.entity.CampaignEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -21,6 +23,7 @@ import java.util.concurrent.atomic.DoubleAdder;
 public class BudgetService {
     
     private final AdsConfiguration adsConfiguration;
+    private final CampaignService campaignService;
     
     // 广告活动预算信息
     private final Map<String, CampaignBudget> campaignBudgets = new ConcurrentHashMap<>();
@@ -46,20 +49,40 @@ public class BudgetService {
         }
         
         try {
-            CampaignBudget budget = getCampaignBudget(campaignId);
+            // 从infrastructure层获取真实的预算数据
+            CampaignEntity.Budget campaignBudget = campaignService.getCampaignBudget(campaignId);
+            if (campaignBudget == null) {
+                log.warn("未找到广告活动预算信息，使用默认预算检查: campaignId={}", campaignId);
+                return checkDefaultBudget(campaignId, bidPrice);
+            }
+            
+            // 获取内存中的消费记录（用于实时预算控制）
+            CampaignBudget localBudget = getCampaignBudget(campaignId);
             
             // 检查日预算
-            if (budget.getDailySpent() + bidPrice > budget.getDailyBudget()) {
+            double dailyBudget = campaignBudget.getDailyBudget() != null ? 
+                campaignBudget.getDailyBudget().doubleValue() : adsConfiguration.getBudget().getDefaultDailyBudget();
+            double dailySpent = campaignBudget.getSpentToday() != null ? 
+                campaignBudget.getSpentToday().doubleValue() : 0.0;
+            dailySpent += localBudget.getDailySpent(); // 加上内存中的实时消费
+            
+            if (dailySpent + bidPrice > dailyBudget) {
                 log.debug("广告活动日预算不足: campaignId={}, dailySpent={}, dailyBudget={}, bidPrice={}",
-                    campaignId, budget.getDailySpent(), budget.getDailyBudget(), bidPrice);
+                    campaignId, dailySpent, dailyBudget, bidPrice);
                 budgetCheckFailures.incrementAndGet();
                 return false;
             }
             
             // 检查总预算
-            if (budget.getTotalSpent() + bidPrice > budget.getTotalBudget()) {
+            double totalBudget = campaignBudget.getTotalBudget() != null ? 
+                campaignBudget.getTotalBudget().doubleValue() : adsConfiguration.getBudget().getDefaultDailyBudget() * 30;
+            double totalSpent = campaignBudget.getSpentTotal() != null ? 
+                campaignBudget.getSpentTotal().doubleValue() : 0.0;
+            totalSpent += localBudget.getTotalSpent(); // 加上内存中的实时消费
+            
+            if (totalSpent + bidPrice > totalBudget) {
                 log.debug("广告活动总预算不足: campaignId={}, totalSpent={}, totalBudget={}, bidPrice={}",
-                    campaignId, budget.getTotalSpent(), budget.getTotalBudget(), bidPrice);
+                    campaignId, totalSpent, totalBudget, bidPrice);
                 budgetCheckFailures.incrementAndGet();
                 return false;
             }
@@ -71,6 +94,27 @@ public class BudgetService {
             budgetCheckFailures.incrementAndGet();
             return false;
         }
+    }
+    
+    /**
+     * 使用默认预算进行检查（当无法获取真实预算数据时）
+     */
+    private boolean checkDefaultBudget(String campaignId, double bidPrice) {
+        CampaignBudget budget = getCampaignBudget(campaignId);
+        
+        // 检查日预算
+        if (budget.getDailySpent() + bidPrice > budget.getDailyBudget()) {
+            budgetCheckFailures.incrementAndGet();
+            return false;
+        }
+        
+        // 检查总预算
+        if (budget.getTotalSpent() + bidPrice > budget.getTotalBudget()) {
+            budgetCheckFailures.incrementAndGet();
+            return false;
+        }
+        
+        return true;
     }
     
     /**

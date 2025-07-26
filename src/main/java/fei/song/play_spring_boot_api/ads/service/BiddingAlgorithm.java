@@ -1,9 +1,12 @@
 package fei.song.play_spring_boot_api.ads.service;
 
 import fei.song.play_spring_boot_api.ads.domain.model.*;
+import fei.song.play_spring_boot_api.ads.infrastructure.persistence.entity.CampaignEntity;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -12,7 +15,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class BiddingAlgorithm {
+    
+    private final CampaignService campaignService;
     
     // 算法权重配置
     private static final double USER_VALUE_WEIGHT = 0.3;
@@ -26,9 +32,8 @@ public class BiddingAlgorithm {
     public List<BidCandidate> generateBidCandidates(Impression impression, BidRequest bidRequest) {
         List<BidCandidate> candidates = new ArrayList<>();
         
-        // 模拟从广告库中获取候选广告
-        // 实际实现中这里会查询广告数据库
-        candidates.addAll(getMockAdCandidates(impression, bidRequest));
+        // 从infrastructure层获取真实的广告活动数据
+        candidates.addAll(getRealAdCandidates(impression, bidRequest));
         
         // 计算每个候选的竞价价格和分数
         for (BidCandidate candidate : candidates) {
@@ -123,9 +128,15 @@ public class BiddingAlgorithm {
      * 获取基础竞价价格
      */
     private double getBaseBidPrice(BidCandidate candidate) {
-        // 根据广告活动设置返回基础价格
-        // 这里使用模拟数据
-        return 1.0 + Math.random() * 4.0; // 1.0 - 5.0 之间的随机价格
+        // 从campaign数据中获取真实的竞价价格
+        CampaignEntity.Bidding bidding = campaignService.getCampaignBidding(candidate.getCampaignId());
+        if (bidding != null && bidding.getBaseBid() != null) {
+            return bidding.getBaseBid().doubleValue();
+        }
+        
+        // 如果没有设置基础竞价，使用默认值
+        log.warn("未找到广告活动基础竞价，使用默认值: campaignId={}", candidate.getCampaignId());
+        return 1.0;
     }
     
     /**
@@ -243,39 +254,106 @@ public class BiddingAlgorithm {
     }
     
     /**
-     * 获取模拟广告候选
+     * 从infrastructure层获取真实的广告候选
      */
-    private List<BidCandidate> getMockAdCandidates(Impression impression, BidRequest bidRequest) {
+    private List<BidCandidate> getRealAdCandidates(Impression impression, BidRequest bidRequest) {
         List<BidCandidate> candidates = new ArrayList<>();
         
-        // 生成3-8个模拟候选广告
-        int candidateCount = 3 + (int)(Math.random() * 6);
-        
-        for (int i = 0; i < candidateCount; i++) {
-            BidCandidate candidate = BidCandidate.builder()
-                .impressionId(impression.getId())
-                .adId("ad_" + UUID.randomUUID().toString().substring(0, 8))
-                .creativeId("creative_" + UUID.randomUUID().toString().substring(0, 8))
-                .campaignId("campaign_" + (i % 3 + 1))
-                .priority(1 + (int)(Math.random() * 5))
-                .adMarkup("<div>广告内容 " + (i + 1) + "</div>")
-                .advertiserDomains(Arrays.asList("advertiser" + (i % 3 + 1) + ".com"))
-                .categories(Arrays.asList("IAB1", "IAB2"))
-                .width(impression.getBanner() != null ? impression.getBanner().getW() : 300)
-                .height(impression.getBanner() != null ? impression.getBanner().getH() : 250)
-                .clickUrl("https://advertiser" + (i % 3 + 1) + ".com/click")
-                .impressionUrl("https://advertiser" + (i % 3 + 1) + ".com/impression")
-                .notificationUrl("https://advertiser" + (i % 3 + 1) + ".com/win")
-                .seatId("seat_" + (i % 2 + 1))
-                .passedFraudCheck(true)
-                .budgetAvailable(true)
-                .targetingMatched(true)
-                .build();
+        try {
+            // 从CampaignService获取匹配的广告活动
+             String country = bidRequest.getDevice() != null ? "US" : "US"; // 默认国家
+             Integer deviceType = bidRequest.getDevice() != null ? bidRequest.getDevice().getDevicetype() : 1;
+             BigDecimal minBid = impression.getBidfloor() != null ? BigDecimal.valueOf(impression.getBidfloor()) : BigDecimal.ZERO;
             
-            candidates.add(candidate);
+            List<CampaignEntity> matchingCampaigns = campaignService.getMatchingCampaigns(country, deviceType, minBid);
+            
+            // 将CampaignEntity转换为BidCandidate
+            for (CampaignEntity campaign : matchingCampaigns) {
+                // 为每个campaign的每个creative创建一个候选
+                if (campaign.getCreatives() != null) {
+                    for (CampaignEntity.Creative creative : campaign.getCreatives()) {
+                        BidCandidate candidate = BidCandidate.builder()
+                            .impressionId(impression.getId())
+                            .adId(creative.getCreativeId())
+                            .creativeId(creative.getCreativeId())
+                            .campaignId(campaign.getCampaignId())
+                            .priority(1)
+                            .adMarkup(creative.getHtml() != null ? creative.getHtml() : "<div>广告内容</div>")
+                            .advertiserDomains(Arrays.asList(campaign.getAdvertiserId() + ".com"))
+                            .categories(Arrays.asList("IAB1", "IAB2"))
+                            .width(impression.getBanner() != null ? impression.getBanner().getW() : 300)
+                            .height(impression.getBanner() != null ? impression.getBanner().getH() : 250)
+                            .clickUrl("https://" + campaign.getAdvertiserId() + ".com/click")
+                            .impressionUrl("https://" + campaign.getAdvertiserId() + ".com/impression")
+                            .notificationUrl("https://" + campaign.getAdvertiserId() + ".com/win")
+                            .seatId("seat_" + campaign.getAdvertiserId())
+                            .passedFraudCheck(true)
+                            .budgetAvailable(true)
+                            .targetingMatched(true)
+                            .build();
+                        
+                        candidates.add(candidate);
+                    }
+                } else {
+                    // 如果没有创意，创建一个基础候选
+                    BidCandidate candidate = BidCandidate.builder()
+                        .impressionId(impression.getId())
+                        .adId("ad_" + campaign.getCampaignId())
+                        .creativeId("default_creative")
+                        .campaignId(campaign.getCampaignId())
+                        .priority(1)
+                        .adMarkup("<div>广告内容</div>")
+                        .advertiserDomains(Arrays.asList(campaign.getAdvertiserId() + ".com"))
+                        .categories(Arrays.asList("IAB1", "IAB2"))
+                        .width(impression.getBanner() != null ? impression.getBanner().getW() : 300)
+                        .height(impression.getBanner() != null ? impression.getBanner().getH() : 250)
+                        .clickUrl("https://" + campaign.getAdvertiserId() + ".com/click")
+                        .impressionUrl("https://" + campaign.getAdvertiserId() + ".com/impression")
+                        .notificationUrl("https://" + campaign.getAdvertiserId() + ".com/win")
+                        .seatId("seat_" + campaign.getAdvertiserId())
+                        .passedFraudCheck(true)
+                        .budgetAvailable(true)
+                        .targetingMatched(true)
+                        .build();
+                    
+                    candidates.add(candidate);
+                }
+            }
+            
+            log.debug("从infrastructure层获取到{}个广告候选", candidates.size());
+            
+        } catch (Exception e) {
+            log.error("获取广告候选时发生错误，使用备用候选", e);
+            // 如果获取真实数据失败，返回一个基础候选以保证系统可用性
+            candidates.add(createFallbackCandidate(impression));
         }
         
         return candidates;
+    }
+    
+    /**
+     * 创建备用候选（当获取真实数据失败时使用）
+     */
+    private BidCandidate createFallbackCandidate(Impression impression) {
+        return BidCandidate.builder()
+            .impressionId(impression.getId())
+            .adId("fallback_ad")
+            .creativeId("fallback_creative")
+            .campaignId("fallback_campaign")
+            .priority(1)
+            .adMarkup("<div>备用广告内容</div>")
+            .advertiserDomains(Arrays.asList("fallback.com"))
+            .categories(Arrays.asList("IAB1"))
+            .width(impression.getBanner() != null ? impression.getBanner().getW() : 300)
+            .height(impression.getBanner() != null ? impression.getBanner().getH() : 250)
+            .clickUrl("https://fallback.com/click")
+            .impressionUrl("https://fallback.com/impression")
+            .notificationUrl("https://fallback.com/win")
+            .seatId("fallback_seat")
+            .passedFraudCheck(true)
+            .budgetAvailable(true)
+            .targetingMatched(true)
+            .build();
     }
     
     /**
