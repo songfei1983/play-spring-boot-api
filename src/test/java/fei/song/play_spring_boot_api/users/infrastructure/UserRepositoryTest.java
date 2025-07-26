@@ -14,7 +14,7 @@ class UserRepositoryTest {
     
     @BeforeEach
     void setUp() {
-        userRepository = new UserRepository(null);
+        userRepository = new UserRepository();
     }
     
     @Test

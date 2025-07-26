@@ -3,7 +3,6 @@ package fei.song.play_spring_boot_api.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
  * MongoDB 配置属性类
