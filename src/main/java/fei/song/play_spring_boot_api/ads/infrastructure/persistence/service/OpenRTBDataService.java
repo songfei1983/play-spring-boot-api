@@ -2,8 +2,8 @@ package fei.song.play_spring_boot_api.ads.infrastructure.persistence.service;
 
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.entity.*;
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.repository.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class OpenRTBDataService {
 
     private final BidRequestRepository bidRequestRepository;
@@ -31,6 +30,23 @@ public class OpenRTBDataService {
     private final InventoryRepository inventoryRepository;
     private final BidStatisticsRepository bidStatisticsRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    public OpenRTBDataService(
+            BidRequestRepository bidRequestRepository,
+            BidResponseRepository bidResponseRepository,
+            CampaignRepository campaignRepository,
+            UserProfileRepository userProfileRepository,
+            InventoryRepository inventoryRepository,
+            BidStatisticsRepository bidStatisticsRepository,
+            @Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
+        this.bidRequestRepository = bidRequestRepository;
+        this.bidResponseRepository = bidResponseRepository;
+        this.campaignRepository = campaignRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.bidStatisticsRepository = bidStatisticsRepository;
+        this.redisTemplate = redisTemplate;
+    }
 
     // 缓存键前缀
     private static final String CACHE_PREFIX_CAMPAIGN = "campaign:";
@@ -60,21 +76,26 @@ public class OpenRTBDataService {
      * 获取活跃的广告活动（带缓存）
      */
     public List<CampaignEntity> getActiveCampaigns() {
-        String cacheKey = CACHE_PREFIX_CAMPAIGN + "active";
-        
-        @SuppressWarnings("unchecked")
-        List<CampaignEntity> cachedCampaigns = (List<CampaignEntity>) redisTemplate.opsForValue().get(cacheKey);
-        
-        if (cachedCampaigns != null) {
-            log.debug("Retrieved {} active campaigns from cache", cachedCampaigns.size());
-            return cachedCampaigns;
+        if (redisTemplate != null) {
+            String cacheKey = CACHE_PREFIX_CAMPAIGN + "active";
+            
+            @SuppressWarnings("unchecked")
+            List<CampaignEntity> cachedCampaigns = (List<CampaignEntity>) redisTemplate.opsForValue().get(cacheKey);
+            
+            if (cachedCampaigns != null) {
+                log.debug("Retrieved {} active campaigns from cache", cachedCampaigns.size());
+                return cachedCampaigns;
+            }
         }
 
         List<CampaignEntity> campaigns = campaignRepository.findActiveCampaigns(LocalDateTime.now());
         
-        // 缓存5分钟
-        redisTemplate.opsForValue().set(cacheKey, campaigns, 5, TimeUnit.MINUTES);
-        log.debug("Cached {} active campaigns", campaigns.size());
+        if (redisTemplate != null) {
+            // 缓存5分钟
+            String cacheKey = CACHE_PREFIX_CAMPAIGN + "active";
+            redisTemplate.opsForValue().set(cacheKey, campaigns, 5, TimeUnit.MINUTES);
+            log.debug("Cached {} active campaigns", campaigns.size());
+        }
         
         return campaigns;
     }
@@ -95,18 +116,21 @@ public class OpenRTBDataService {
      * 获取用户画像（带缓存）
      */
     public Optional<UserProfileEntity> getUserProfile(String userId) {
-        String cacheKey = CACHE_PREFIX_USER_PROFILE + userId;
-        
-        UserProfileEntity cachedProfile = (UserProfileEntity) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedProfile != null) {
-            log.debug("Retrieved user profile from cache: {}", userId);
-            return Optional.of(cachedProfile);
+        if (redisTemplate != null) {
+            String cacheKey = CACHE_PREFIX_USER_PROFILE + userId;
+            
+            UserProfileEntity cachedProfile = (UserProfileEntity) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedProfile != null) {
+                log.debug("Retrieved user profile from cache: {}", userId);
+                return Optional.of(cachedProfile);
+            }
         }
 
         Optional<UserProfileEntity> profile = userProfileRepository.findByUserId(userId);
         
-        if (profile.isPresent()) {
+        if (profile.isPresent() && redisTemplate != null) {
             // 缓存30分钟
+            String cacheKey = CACHE_PREFIX_USER_PROFILE + userId;
             redisTemplate.opsForValue().set(cacheKey, profile.get(), 30, TimeUnit.MINUTES);
             log.debug("Cached user profile: {}", userId);
         }
@@ -122,9 +146,11 @@ public class OpenRTBDataService {
         UserProfileEntity saved = userProfileRepository.save(userProfile);
         
         // 清除缓存
-        String cacheKey = CACHE_PREFIX_USER_PROFILE + userProfile.getUserId();
-        redisTemplate.delete(cacheKey);
-        log.debug("Updated and cleared cache for user profile: {}", userProfile.getUserId());
+        if (redisTemplate != null) {
+            String cacheKey = CACHE_PREFIX_USER_PROFILE + userProfile.getUserId();
+            redisTemplate.delete(cacheKey);
+            log.debug("Updated and cleared cache for user profile: {}", userProfile.getUserId());
+        }
         
         return saved;
     }
@@ -133,18 +159,21 @@ public class OpenRTBDataService {
      * 获取广告位库存（带缓存）
      */
     public Optional<InventoryEntity> getInventory(String placementId) {
-        String cacheKey = CACHE_PREFIX_INVENTORY + placementId;
-        
-        InventoryEntity cachedInventory = (InventoryEntity) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedInventory != null) {
-            log.debug("Retrieved inventory from cache: {}", placementId);
-            return Optional.of(cachedInventory);
+        if (redisTemplate != null) {
+            String cacheKey = CACHE_PREFIX_INVENTORY + placementId;
+            
+            InventoryEntity cachedInventory = (InventoryEntity) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedInventory != null) {
+                log.debug("Retrieved inventory from cache: {}", placementId);
+                return Optional.of(cachedInventory);
+            }
         }
 
         Optional<InventoryEntity> inventory = inventoryRepository.findByPlacementId(placementId);
         
-        if (inventory.isPresent()) {
+        if (inventory.isPresent() && redisTemplate != null) {
             // 缓存15分钟
+            String cacheKey = CACHE_PREFIX_INVENTORY + placementId;
             redisTemplate.opsForValue().set(cacheKey, inventory.get(), 15, TimeUnit.MINUTES);
             log.debug("Cached inventory: {}", placementId);
         }
@@ -172,8 +201,10 @@ public class OpenRTBDataService {
         BidStatisticsEntity saved = bidStatisticsRepository.save(statistics);
         
         // 清除相关缓存
-        String cacheKey = CACHE_PREFIX_BID_STATS + statistics.getDate() + ":" + statistics.getCampaignId();
-        redisTemplate.delete(cacheKey);
+        if (redisTemplate != null) {
+            String cacheKey = CACHE_PREFIX_BID_STATS + statistics.getDate() + ":" + statistics.getCampaignId();
+            redisTemplate.delete(cacheKey);
+        }
         
         return saved;
     }

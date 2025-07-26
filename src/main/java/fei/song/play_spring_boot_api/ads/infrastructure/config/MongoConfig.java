@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * MongoDB 配置类
  */
 @Configuration
-@EnableMongoRepositories(basePackages = "fei.song.play_spring_boot_api.ads.infrastructure.repository")
+@EnableMongoRepositories(basePackages = "fei.song.play_spring_boot_api.ads.infrastructure.persistence.repository")
 @ConditionalOnProperty(name = "mongo.enabled", havingValue = "true", matchIfMissing = true)
 public class MongoConfig extends AbstractMongoClientConfiguration {
 

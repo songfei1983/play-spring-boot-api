@@ -139,7 +139,7 @@ public interface BidStatisticsRepository extends MongoRepository<BidStatisticsEn
         "{ $match: { 'date': { $gte: ?0, $lte: ?1 } } }",
         "{ $group: { _id: null, totalRevenue: { $sum: '$revenue_stats.total_revenue' } } }"
     })
-    BigDecimal getTotalRevenue(LocalDate startDate, LocalDate endDate);
+    List<TotalRevenueAggregation> getTotalRevenue(LocalDate startDate, LocalDate endDate);
 
     /**
      * 统计指定活动的总展示数
@@ -148,7 +148,7 @@ public interface BidStatisticsRepository extends MongoRepository<BidStatisticsEn
         "{ $match: { 'campaign_id': ?0, 'date': { $gte: ?1, $lte: ?2 } } }",
         "{ $group: { _id: null, totalImpressions: { $sum: '$bid_stats.impressions' } } }"
     })
-    Long getTotalImpressionsByCampaign(String campaignId, LocalDate startDate, LocalDate endDate);
+    List<TotalImpressionsAggregation> getTotalImpressionsByCampaign(String campaignId, LocalDate startDate, LocalDate endDate);
 
     /**
      * 删除指定日期之前的统计数据
@@ -182,5 +182,13 @@ public interface BidStatisticsRepository extends MongoRepository<BidStatisticsEn
         BigDecimal getTotalRevenue();
         Long getTotalImpressions();
         Double getAvgResponseTime();
+    }
+
+    interface TotalRevenueAggregation {
+        BigDecimal getTotalRevenue();
+    }
+
+    interface TotalImpressionsAggregation {
+        Long getTotalImpressions();
     }
 }

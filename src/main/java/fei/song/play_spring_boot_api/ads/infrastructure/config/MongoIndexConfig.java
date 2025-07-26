@@ -41,8 +41,7 @@ public class MongoIndexConfig {
         // 创建时间戳索引（用于时间范围查询）
         indexOps.createIndex(new Index().on("timestamp", Sort.Direction.DESC));
         
-        // 创建请求ID索引（用于快速查找）
-        indexOps.createIndex(new Index().on("id", Sort.Direction.ASC).unique());
+        // 注意：MongoDB的_id字段本身就是唯一的且已有索引，不需要额外创建
         
         // 创建应用ID索引（用于按应用过滤）
         indexOps.createIndex(new Index().on("app.id", Sort.Direction.ASC));
@@ -67,8 +66,7 @@ public class MongoIndexConfig {
     private void createBidResponseIndexes() {
         IndexOperations indexOps = mongoTemplate.indexOps("bid_responses");
         
-        // 创建响应ID索引
-        indexOps.createIndex(new Index().on("id", Sort.Direction.ASC).unique());
+        // 注意：MongoDB的_id字段本身就是唯一的且已有索引，不需要额外创建
         
         // 创建竞价请求ID索引（用于关联查询）
         indexOps.createIndex(new Index().on("bidid", Sort.Direction.ASC));
@@ -86,8 +84,7 @@ public class MongoIndexConfig {
     private void createInventoryIndexes() {
         IndexOperations indexOps = mongoTemplate.indexOps("inventory");
         
-        // 创建广告位ID索引
-        indexOps.createIndex(new Index().on("id", Sort.Direction.ASC).unique());
+        // 注意：MongoDB的_id字段本身就是唯一的且已有索引，不需要额外创建
         
         // 创建应用ID索引
         indexOps.createIndex(new Index().on("appId", Sort.Direction.ASC));

@@ -104,7 +104,7 @@ public interface UserSegmentRepository extends MongoRepository<UserSegmentEntity
      * 按创建时间降序查找分段
      */
     @Query(sort = "{'created_at': -1}")
-    List<UserSegmentEntity> findAllOrderByCreatedAtDesc();
+    List<UserSegmentEntity> findAllByOrderByCreatedAtDesc();
 
     /**
      * 统计指定状态的分段数量

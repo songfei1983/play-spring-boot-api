@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class SegmentFilterService {
 
-    private final UserProfileService userProfileService;
+    private final AdsUserProfileService userProfileService;
     private final UserSegmentService userSegmentService;
     private final UserSegmentMappingService mappingService;
 

@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Repository
+@Repository("usersUserProfileRepository")
 public class UserProfileRepository {
     private final List<UserProfile> profiles = new ArrayList<>();
     private final AtomicLong idGenerator = new AtomicLong(1);

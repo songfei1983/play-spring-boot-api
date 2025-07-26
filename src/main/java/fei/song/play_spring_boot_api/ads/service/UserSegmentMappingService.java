@@ -220,7 +220,7 @@ public class UserSegmentMappingService {
      * 按匹配分数排序获取用户分段
      */
     public List<UserSegmentMappingEntity> getUserSegmentsByScore(String userId) {
-        return mappingRepository.findActiveByUserIdOrderByMatchScoreDesc(userId);
+        return mappingRepository.findActiveByUserIdAndOrderByMatchScoreDesc(userId);
     }
 
     /**

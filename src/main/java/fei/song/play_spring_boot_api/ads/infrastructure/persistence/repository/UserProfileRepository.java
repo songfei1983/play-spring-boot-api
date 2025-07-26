@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * 用户画像仓储接口
  */
-@Repository
+@Repository("adsUserProfileRepository")
 public interface UserProfileRepository extends MongoRepository<UserProfileEntity, String> {
 
     /**

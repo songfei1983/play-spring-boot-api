@@ -2,7 +2,7 @@ package fei.song.play_spring_boot_api.ads.service;
 
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.entity.UserProfileEntity;
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.repository.UserProfileRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,14 +19,17 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * 用户画像服务
+ * 广告用户画像服务
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class UserProfileService {
+public class AdsUserProfileService {
 
     private final UserProfileRepository userProfileRepository;
+
+    public AdsUserProfileService(@Qualifier("adsUserProfileRepository") UserProfileRepository userProfileRepository) {
+        this.userProfileRepository = userProfileRepository;
+    }
 
     /**
      * 创建用户画像

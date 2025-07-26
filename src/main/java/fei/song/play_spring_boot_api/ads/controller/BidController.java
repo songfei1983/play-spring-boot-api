@@ -3,6 +3,7 @@ package fei.song.play_spring_boot_api.ads.controller;
 import fei.song.play_spring_boot_api.ads.domain.model.BidRequest;
 import fei.song.play_spring_boot_api.ads.domain.model.BidResponse;
 import fei.song.play_spring_boot_api.ads.service.BidServer;
+import fei.song.play_spring_boot_api.ads.service.BidRequestMetricsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class BidController {
     
     private final BidServer bidServer;
+    private final BidRequestMetricsService metricsService;
     
     /**
      * 处理竞价请求
@@ -63,7 +65,18 @@ public class BidController {
             
             long processingTime = System.currentTimeMillis() - startTime;
             
-            if (response.getSeatbid() != null && !response.getSeatbid().isEmpty()) {
+            // 记录统计数据
+            String adSlotType = extractAdSlotType(bidRequest);
+            String dspSource = extractDspSource(httpRequest);
+            boolean success = response.getSeatbid() != null && !response.getSeatbid().isEmpty();
+            
+            try {
+                metricsService.recordBidRequest(adSlotType, dspSource, success, processingTime);
+            } catch (Exception e) {
+                log.warn("记录统计数据失败: requestId={}", bidRequest.getId(), e);
+            }
+            
+            if (success) {
                 log.info("竞价成功: requestId={}, bids={}, processingTime={}ms", 
                     bidRequest.getId(), response.getSeatbid().size(), processingTime);
                 return ResponseEntity.ok(response);
@@ -77,6 +90,15 @@ public class BidController {
             long processingTime = System.currentTimeMillis() - startTime;
             log.error("处理竞价请求异常: requestId={}, ip={}, processingTime={}ms", 
                 bidRequest.getId(), clientIp, processingTime, e);
+            
+            // 记录失败统计
+            try {
+                String adSlotType = extractAdSlotType(bidRequest);
+                String dspSource = extractDspSource(httpRequest);
+                metricsService.recordBidRequest(adSlotType, dspSource, false, processingTime);
+            } catch (Exception ex) {
+                log.warn("记录失败统计数据异常: requestId={}", bidRequest.getId(), ex);
+            }
             
             // 返回无竞价响应
             BidResponse errorResponse = BidResponse.builder()
@@ -180,6 +202,54 @@ public class BidController {
         }
         
         return request.getRemoteAddr();
+    }
+    
+    /**
+     * 提取广告位类型
+     */
+    private String extractAdSlotType(BidRequest bidRequest) {
+        if (bidRequest.getImp() != null && !bidRequest.getImp().isEmpty()) {
+            // 根据第一个impression的类型判断广告位类型
+            var imp = bidRequest.getImp().get(0);
+            if (imp.getBanner() != null) {
+                return "banner";
+            } else if (imp.getVideo() != null) {
+                return "video";
+            } else if (imp.getNativeAd() != null) {
+                return "native";
+            } else if (imp.getAudio() != null) {
+                return "audio";
+            }
+        }
+        return "unknown";
+    }
+    
+    /**
+     * 提取DSP来源
+     */
+    private String extractDspSource(HttpServletRequest request) {
+        // 从User-Agent或自定义头部提取DSP来源
+        String userAgent = request.getHeader("User-Agent");
+        String dspHeader = request.getHeader("X-DSP-Source");
+        
+        if (dspHeader != null && !dspHeader.isEmpty()) {
+            return dspHeader.toLowerCase();
+        }
+        
+        if (userAgent != null) {
+            userAgent = userAgent.toLowerCase();
+            if (userAgent.contains("google")) {
+                return "google";
+            } else if (userAgent.contains("facebook")) {
+                return "facebook";
+            } else if (userAgent.contains("amazon")) {
+                return "amazon";
+            } else if (userAgent.contains("microsoft")) {
+                return "microsoft";
+            }
+        }
+        
+        return "unknown";
     }
     
     /**

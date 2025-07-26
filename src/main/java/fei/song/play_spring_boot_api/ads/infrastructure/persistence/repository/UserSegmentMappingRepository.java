@@ -180,7 +180,7 @@ public interface UserSegmentMappingRepository extends MongoRepository<UserSegmen
      * 按匹配分数降序查找用户的分段映射
      */
     @Query(value = "{'user_id': ?0, 'is_active': true}", sort = "{'match_score': -1}")
-    List<UserSegmentMappingEntity> findActiveByUserIdOrderByMatchScoreDesc(String userId);
+    List<UserSegmentMappingEntity> findActiveByUserIdAndOrderByMatchScoreDesc(String userId);
 
     /**
      * 按分配时间降序查找映射

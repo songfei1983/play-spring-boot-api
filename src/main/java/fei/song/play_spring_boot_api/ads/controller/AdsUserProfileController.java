@@ -1,7 +1,7 @@
 package fei.song.play_spring_boot_api.ads.controller;
 
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.entity.UserProfileEntity;
-import fei.song.play_spring_boot_api.ads.service.UserProfileService;
+import fei.song.play_spring_boot_api.ads.service.AdsUserProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,11 +24,11 @@ import java.util.Optional;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/ads/profiles")
+@RequestMapping("/api/v1/ads/user-profiles")
 @RequiredArgsConstructor
-public class UserProfileController {
+public class AdsUserProfileController {
 
-    private final UserProfileService userProfileService;
+    private final AdsUserProfileService userProfileService;
 
     /**
      * 创建用户画像
