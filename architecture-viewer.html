@@ -76,7 +76,7 @@
             margin-bottom: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             overflow: hidden;
-            height: calc(100vh - 250px);
+            height: calc(100vh - 220px);
             display: flex;
             flex-direction: column;
         }
@@ -93,14 +93,15 @@
             overflow: auto;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 0;
+            padding: 10px;
         }
         .mermaid svg {
             max-width: 100% !important;
-            max-height: 100% !important;
-            width: auto !important;
             height: auto !important;
+            width: 100% !important;
+            min-height: calc(100vh - 300px) !important;
         }
         .tech-stack {
             display: grid;
@@ -233,6 +234,7 @@ flowchart TD
         subgraph "Ads Controllers"
             direction TB
             BC["BidController"]
+            BRMC["BidRequestMetricsController"]
         end
     end
     
@@ -264,6 +266,7 @@ flowchart TD
             FDS["FraudDetectionService"]
             BUS["BudgetService"]
             CS["CampaignService"]
+            BRMS["BidRequestMetricsService"]
         end
     end
     
@@ -293,6 +296,7 @@ flowchart TD
             CR["CampaignRepository"]
             IR["InventoryRepository"]
             BSR["BidStatisticsRepository"]
+            BRMR["BidRequestMetricsRepository"]
         end
         
         subgraph "Data Services"
@@ -306,6 +310,7 @@ flowchart TD
         direction LR
         MONGO[("MongoDB\n(OpenRTB & Segments)")]
         H2[("H2 Database\n(User Data)")]
+        REDIS[("Redis\n(Cache & Metrics)")]
     end
     
     %% 连接关系
@@ -322,6 +327,7 @@ flowchart TD
     API --> USC
     API --> USMC
     API --> BC
+    API --> BRMC
     
     UC --> US
     UPC --> UPS
@@ -331,6 +337,7 @@ flowchart TD
     USC --> USS
     USMC --> USMS
     BC --> BS
+    BRMC --> BRMS
     
     US --> UR
     UPS --> UPR
@@ -346,6 +353,7 @@ flowchart TD
     BS --> FDS
     BS --> BUS
     BS --> SFS
+    BS --> BRMS
     
     BA --> CS
     BUS --> CS
@@ -361,6 +369,9 @@ flowchart TD
     ORDS --> IR
     ORDS --> BSR
     
+    BRMS --> BRMR
+    BRMS --> REDIS
+    
     UR --> H2
     UPR --> H2
     ATR --> H2
@@ -375,6 +386,7 @@ flowchart TD
     CR --> MONGO
     IR --> MONGO
     BSR --> MONGO
+    BRMR --> MONGO
     
     classDef controller fill:#e1f5fe
     classDef service fill:#f3e5f5
@@ -382,10 +394,10 @@ flowchart TD
     classDef database fill:#ffebee
     classDef external fill:#f5f5f5
     
-    class UC,UPC,ATC,PHC,UPFC,USC,USMC,BC controller
-    class US,UPS,ATS,PHS,UPFS,USS,USMS,SFS,BS,BA,ASF,FDS,BUS,CS,ORDS service
-    class UR,UPR,ATR,PHR,UPFR,USR_SEG,USMR,BRR,BRRE,CR,IR,BSR repository
-    class MONGO,H2 database
+    class UC,UPC,ATC,PHC,UPFC,USC,USMC,BC,BRMC controller
+    class US,UPS,ATS,PHS,UPFS,USS,USMS,SFS,BS,BA,ASF,FDS,BUS,CS,ORDS,BRMS service
+    class UR,UPR,ATR,PHR,UPFR,USR_SEG,USMR,BRR,BRRE,CR,IR,BSR,BRMR repository
+    class MONGO,H2,REDIS database
     class Client,ADX,DSP,NGINX external
                 </div>
             </div>
@@ -406,8 +418,10 @@ sequenceDiagram
     participant BUS as BudgetService
     participant CS as CampaignService
     participant ORDS as OpenRTBDataService
+    participant BRMS as BidRequestMetricsService
     participant MONGO as MongoDB
     participant H2DB as H2Database
+    participant REDIS as Redis
     
     ADX->>BC: Bid Request (OpenRTB)
     BC->>BS: Process Bid Request
@@ -449,6 +463,10 @@ sequenceDiagram
     CS-->>BUS: Budget Info
     BUS-->>BS: Budget Approval
     
+    BS->>BRMS: Record Bid Request
+    BRMS->>REDIS: Update Real-time Counter
+    BRMS->>MONGO: Store Metrics Data
+    
     BS->>MONGO: Store Bid Response
     BS-->>BC: Bid Response
     BC-->>ADX: Bid Response (OpenRTB)
@@ -484,7 +502,8 @@ flowchart TD
         direction LR
         MONGO_RT[("MongoDB\n(OpenRTB & Segments)")]
         H2_USER[("H2\n(User Data)")]
-        CACHE["Redis Cache"]
+        REDIS_CACHE["Redis Cache"]
+        REDIS_METRICS["Redis Metrics"]
     end
     
     %% 数据输出层
@@ -511,18 +530,21 @@ flowchart TD
     H2_USER --> PROFILE
     
     %% 缓存层连接
-    MONGO_RT --> CACHE
-    H2_USER --> CACHE
+    MONGO_RT --> REDIS_CACHE
+    H2_USER --> REDIS_CACHE
+    RT --> REDIS_METRICS
     
     %% 输出层连接
-    CACHE --> API_RESP
+    REDIS_CACHE --> API_RESP
+    REDIS_METRICS --> API_RESP
     MONGO_RT --> API_RESP
     H2_USER --> ANALYTICS
     H2_USER --> REPORTS
     MONGO_RT --> SEGMENTS
     
     %% 机器学习连接
-    ML --> CACHE
+    ML --> REDIS_CACHE
+    ML --> REDIS_METRICS
     MONGO_RT --> ML
     H2_USER --> ML
     SEGMENT --> ML
@@ -559,7 +581,8 @@ graph TB
     
     %% 缓存层
     subgraph "Cache Tier"
-        REDIS["Redis Cluster"]
+        REDIS_CLUSTER["Redis Cluster"]
+        REDIS_METRICS_CLUSTER["Redis Metrics Cluster"]
     end
     
     %% 监控
@@ -586,9 +609,12 @@ graph TB
     APP2 --> H2_DB
     APP3 --> H2_DB
     
-    APP1 --> REDIS
-    APP2 --> REDIS
-    APP3 --> REDIS
+    APP1 --> REDIS_CLUSTER
+    APP1 --> REDIS_METRICS_CLUSTER
+    APP2 --> REDIS_CLUSTER
+    APP2 --> REDIS_METRICS_CLUSTER
+    APP3 --> REDIS_CLUSTER
+    APP3 --> REDIS_METRICS_CLUSTER
     
     APP1 --> PROMETHEUS
     APP2 --> PROMETHEUS
@@ -609,10 +635,11 @@ graph TB
                         <h3>🔧 后端技术栈</h3>
                         <ul class="tech-list">
                             <li><strong>框架:</strong> Spring Boot 3.x</li>
-                            <li><strong>数据库:</strong> MongoDB, H2</li>
-                            <li><strong>缓存:</strong> Redis</li>
+                            <li><strong>数据库:</strong> MongoDB (OpenRTB数据 & 用户分段), H2 (用户数据)</li>
+                            <li><strong>缓存:</strong> Redis (数据缓存 & 实时指标)</li>
                             <li><strong>构建工具:</strong> Maven</li>
                             <li><strong>容器化:</strong> Docker + Docker Compose</li>
+                            <li><strong>配置管理:</strong> 多环境配置支持 (MEMORY/H2/MONGODB)</li>
                             <li><strong>API文档:</strong> OpenAPI 3.0 (Swagger)</li>
                             <li><strong>测试:</strong> JUnit 5, Mockito</li>
                         </ul>
@@ -636,6 +663,7 @@ graph TB
                             <li><strong>监控:</strong> Prometheus + Grafana</li>
                             <li><strong>日志:</strong> SLF4J + Logback</li>
                             <li><strong>健康检查:</strong> Spring Boot Actuator</li>
+                            <li><strong>实时指标:</strong> Redis计数器 + 统计API</li>
                             <li><strong>容器编排:</strong> Docker Compose</li>
                             <li><strong>负载均衡:</strong> Nginx</li>
                         </ul>
@@ -649,6 +677,17 @@ graph TB
                             <li><strong>异常处理:</strong> 全局异常处理器</li>
                             <li><strong>代码质量:</strong> Lombok, 分层架构</li>
                             <li><strong>文档:</strong> 自动生成API文档</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-category">
+                        <h3>📈 业务功能</h3>
+                        <ul class="tech-list">
+                            <li><strong>用户分段:</strong> 复杂规则引擎 + MongoDB存储</li>
+                            <li><strong>实时统计:</strong> Redis计数器 + 定时聚合</li>
+                            <li><strong>竞价算法:</strong> 多因子定价模型</li>
+                            <li><strong>反欺诈:</strong> 实时检测 + 风险评分</li>
+                            <li><strong>预算控制:</strong> 实时预算监控</li>
                         </ul>
                     </div>
                 </div>
