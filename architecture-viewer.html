@@ -219,6 +219,13 @@ graph TB
             PHC["PurchaseHistoryController"]
         end
         
+        %% 用户画像和分段模块
+        subgraph "User Segmentation Module"
+            UPFC["UserProfileController (MongoDB)"]
+            USC["UserSegmentController"]
+            USMC["UserSegmentMappingController"]
+        end
+        
         %% 广告竞价模块
         subgraph "Ads Module"
             BC["BidController"]
@@ -235,6 +242,14 @@ graph TB
             UPS["UserProfileService"]
             ATS["ActivityTrackService"]
             PHS["PurchaseHistoryService"]
+        end
+        
+        %% 用户画像和分段服务
+        subgraph "User Segmentation Services"
+            UPFS["UserProfileService (MongoDB)"]
+            USS["UserSegmentService"]
+            USMS["UserSegmentMappingService"]
+            SFS["SegmentFilterService"]
         end
         
         %% 广告服务
@@ -258,6 +273,13 @@ graph TB
             UPR["UserProfileRepository"]
             ATR["ActivityTrackRepository"]
             PHR["PurchaseHistoryRepository"]
+        end
+        
+        %% 用户画像和分段数据访问
+        subgraph "User Segmentation Repositories"
+            UPFR["UserProfileRepository (MongoDB)"]
+            USR_SEG["UserSegmentRepository"]
+            USMR["UserSegmentMappingRepository"]
         end
         
         %% 广告数据访问
@@ -291,12 +313,18 @@ graph TB
     API --> UPC
     API --> ATC
     API --> PHC
+    API --> UPFC
+    API --> USC
+    API --> USMC
     API --> BC
     
     UC --> US
     UPC --> UPS
     ATC --> ATS
     PHC --> PHS
+    UPFC --> UPFS
+    USC --> USS
+    USMC --> USMS
     BC --> BS
     
     US --> UR
@@ -304,15 +332,22 @@ graph TB
     ATS --> ATR
     PHS --> PHR
     
+    UPFS --> UPFR
+    USS --> USR_SEG
+    USMS --> USMR
+    
     BS --> BA
     BS --> ASF
     BS --> FDS
     BS --> BUS
+    BS --> SFS
     
     BA --> CS
     BUS --> CS
+    BA --> SFS
     ASF --> CR
     FDS --> BSR
+    SFS --> UPFS
     
     CS --> ORDS
     ORDS --> BRR
@@ -326,6 +361,10 @@ graph TB
     ATR --> H2
     PHR --> H2
     
+    UPFR --> MONGO
+    USR_SEG --> MONGO
+    USMR --> MONGO
+    
     BRR --> MONGO
     BRRE --> MONGO
     CR --> MONGO
@@ -338,9 +377,9 @@ graph TB
     classDef database fill:#ffebee
     classDef external fill:#f5f5f5
     
-    class UC,UPC,ATC,PHC,BC controller
-    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS,CS,ORDS service
-    class UR,UPR,ATR,PHR,BRR,BRRE,CR,IR,BSR repository
+    class UC,UPC,ATC,PHC,UPFC,USC,USMC,BC controller
+    class US,UPS,ATS,PHS,UPFS,USS,USMS,SFS,BS,BA,ASF,FDS,BUS,CS,ORDS service
+    class UR,UPR,ATR,PHR,UPFR,USR_SEG,USMR,BRR,BRRE,CR,IR,BSR repository
     class MONGO,H2 database
     class Client,ADX,DSP,NGINX external
                 </div>
@@ -356,11 +395,14 @@ sequenceDiagram
     participant BS as BidServer
     participant ASF as AdSlotFilterService
     participant FDS as FraudDetectionService
+    participant SFS as SegmentFilterService
+    participant UPFS as UserProfileService
     participant BA as BiddingAlgorithm
     participant BUS as BudgetService
     participant CS as CampaignService
     participant ORDS as OpenRTBDataService
     participant MONGO as MongoDB
+    participant H2DB as H2Database
     
     ADX->>BC: Bid Request (OpenRTB)
     BC->>BS: Process Bid Request
@@ -374,6 +416,15 @@ sequenceDiagram
     FDS->>MONGO: Check Fraud Patterns
     MONGO-->>FDS: Fraud Analysis
     FDS-->>BS: Fraud Score
+    
+    BS->>SFS: User Segment Matching
+    SFS->>UPFS: Get User Profile
+    UPFS->>MONGO: Query User Profile
+    MONGO-->>UPFS: User Profile Data
+    UPFS-->>SFS: User Profile
+    SFS->>MONGO: Query Segment Rules
+    MONGO-->>SFS: Segment Data
+    SFS-->>BS: Matched Segments
     
     BS->>BA: Calculate Bid Price
     BA->>CS: Get Campaign Data

@@ -29,6 +29,13 @@ graph TB
             PHC["PurchaseHistoryController"]
         end
         
+        %% 用户画像和分段模块
+        subgraph "User Segmentation Module"
+            UPFC["UserProfileController (MongoDB)"]
+            USC["UserSegmentController"]
+            USMC["UserSegmentMappingController"]
+        end
+        
         %% 广告竞价模块
         subgraph "Ads Module"
             BC["BidController"]
@@ -45,6 +52,14 @@ graph TB
             UPS["UserProfileService"]
             ATS["ActivityTrackService"]
             PHS["PurchaseHistoryService"]
+        end
+        
+        %% 用户画像和分段服务
+        subgraph "User Segmentation Services"
+            UPFS["UserProfileService (MongoDB)"]
+            USS["UserSegmentService"]
+            USMS["UserSegmentMappingService"]
+            SFS["SegmentFilterService"]
         end
         
         %% 广告服务
@@ -70,6 +85,14 @@ graph TB
             PHD["PurchaseHistory"]
         end
         
+        %% 用户画像和分段领域模型
+        subgraph "User Segmentation Domain"
+            UPFD["UserProfileEntity (MongoDB)"]
+            USD["UserSegmentEntity"]
+            USMD["UserSegmentMappingEntity"]
+            SRD["SegmentRule"]
+        end
+        
         %% 广告领域模型
         subgraph "Ads Domain"
             BR["BidRequest"]
@@ -91,6 +114,13 @@ graph TB
             UPR["UserProfileRepository"]
             ATR["ActivityTrackRepository"]
             PHR["PurchaseHistoryRepository"]
+        end
+        
+        %% 用户画像和分段数据访问
+        subgraph "User Segmentation Repositories"
+            UPFR["UserProfileRepository (MongoDB)"]
+            USR_SEG["UserSegmentRepository"]
+            USMR["UserSegmentMappingRepository"]
         end
         
         %% 广告数据访问
@@ -133,24 +163,44 @@ graph TB
     API --> ATC
     API --> PHC
     API --> BC
+    API --> UPFC
+    API --> USC
+    API --> USMC
     
     UC --> US
     UPC --> UPS
     ATC --> ATS
     PHC --> PHS
     BC --> BS
+    UPFC --> UPFS
+    USC --> USS
+    USMC --> USMS
     
     US --> UR
     UPS --> UPR
     ATS --> ATR
     PHS --> PHR
     
+    %% 用户画像和分段服务连接
+    UPFS --> UPFR
+    USS --> USR_SEG
+    USMS --> USMR
+    SFS --> UPFS
+    SFS --> USS
+    SFS --> USMS
+    
+    %% H2到MongoDB的数据转存流程
+    UPS --> UPFS
+    US --> UPFS
+    
     BS --> BA
     BS --> ASF
     BS --> FDS
     BS --> BUS
+    BS --> SFS
     
     BA --> CS
+    BA --> SFS
     ASF --> CR
     FDS --> BSR
     BUS --> CS
@@ -165,6 +215,11 @@ graph TB
     UPR --> H2
     ATR --> H2
     PHR --> H2
+    
+    %% 用户画像和分段数据存储到MongoDB
+    UPFR --> MONGO
+    USR_SEG --> MONGO
+    USMR --> MONGO
     
     BRR --> MONGO
     BRRE --> MONGO
@@ -185,10 +240,10 @@ graph TB
     classDef database fill:#ffebee
     classDef external fill:#f5f5f5
     
-    class UC,UPC,ATC,PHC,BC controller
-    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS service
-    class UD,UPD,ATD,PHD,BR,BRE,IMP,DEV,USR,BC_MODEL domain
-    class UR,UPR,ATR,PHR,BRR,BRRE,CR,IR,BSR repository
+    class UC,UPC,ATC,PHC,BC,UPFC,USC,USMC controller
+    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS,CS,UPFS,USS,USMS,SFS service
+    class UD,UPD,ATD,PHD,BR,BRE,IMP,DEV,USR,BC_MODEL,UPFD,USD,USMD,SRD domain
+    class UR,UPR,ATR,PHR,BRR,BRRE,CR,IR,BSR,UPFR,USR_SEG,USMR repository
     class MONGO,H2 database
     class Client,ADX,DSP,NGINX external
 ```
@@ -205,11 +260,24 @@ sequenceDiagram
     participant BA as BiddingAlgorithm
     participant BUS as BudgetService
     participant CS as CampaignService
+    participant SFS as SegmentFilterService
+    participant UPFS as UserProfileService
     participant ORDS as OpenRTBDataService
     participant MONGO as MongoDB
+    participant H2 as H2Database
     
     ADX->>BC: Bid Request (OpenRTB)
     BC->>BS: Process Bid Request
+    
+    %% 用户画像和分段匹配
+    BS->>SFS: Match User Segments
+    SFS->>UPFS: Get User Profile
+    UPFS->>MONGO: Query User Profile
+    MONGO-->>UPFS: User Profile Data
+    UPFS-->>SFS: User Profile
+    SFS->>MONGO: Query User Segments
+    MONGO-->>SFS: User Segments
+    SFS-->>BS: Matched Segments
     
     BS->>ASF: Filter Ad Slots
     ASF->>MONGO: Query Campaign Data
@@ -253,6 +321,7 @@ flowchart LR
         BR["Bid Requests"]
         UA["User Activities"]
         PH["Purchase History"]
+        UD["User Data"]
     end
     
     %% 数据处理
@@ -260,11 +329,13 @@ flowchart LR
         RT["Real-time Processing"]
         BATCH["Batch Processing"]
         ML["Machine Learning"]
+        SEGMENT["User Segmentation"]
+        PROFILE["Profile Enhancement"]
     end
     
     %% 数据存储
     subgraph "Data Storage"
-        MONGO_RT[("MongoDB\n(Real-time Data)")]
+        MONGO_RT[("MongoDB\n(OpenRTB & Segments)")]
         H2_USER[("H2\n(User Data)")]
         CACHE["Redis Cache"]
     end
@@ -274,14 +345,21 @@ flowchart LR
         API_RESP["API Responses"]
         ANALYTICS["Analytics"]
         REPORTS["Reports"]
+        SEGMENTS["User Segments"]
     end
     
     BR --> RT
     UA --> BATCH
     PH --> BATCH
+    UD --> BATCH
     
     RT --> MONGO_RT
     BATCH --> H2_USER
+    
+    %% H2到MongoDB的数据转存流程
+    H2_USER --> PROFILE
+    PROFILE --> SEGMENT
+    SEGMENT --> MONGO_RT
     
     MONGO_RT --> CACHE
     H2_USER --> CACHE
@@ -289,10 +367,12 @@ flowchart LR
     CACHE --> API_RESP
     MONGO_RT --> ANALYTICS
     H2_USER --> REPORTS
+    MONGO_RT --> SEGMENTS
     
     ML --> CACHE
     MONGO_RT --> ML
     H2_USER --> ML
+    SEGMENT --> ML
 ```
 
 ## 部署架构
@@ -406,6 +486,7 @@ graph TB
 
 ### 2. 模块化设计
 - **用户模块**: 处理用户管理、画像、活动跟踪
+- **用户画像和分段模块**: 处理用户画像构建、用户分段、分段过滤、数据转存
 - **广告模块**: 处理OpenRTB竞价、预算控制、反欺诈、广告活动管理
 
 ### 3. 微服务就绪
