@@ -199,7 +199,7 @@
 flowchart TD
     %% 外部系统层
     subgraph "External Systems"
-        direction LR
+        direction TB
         Client["客户端/前端应用"]
         ADX["Ad Exchange/SSP"]
         DSP["DSP平台"]
@@ -207,14 +207,14 @@ flowchart TD
     
     %% API网关层
     subgraph "API Gateway Layer"
-        direction LR
+        direction TB
         NGINX["Nginx (Port 80)"]
         API["Spring Boot API (Port 8080)"]
     end
     
     %% 应用层（控制器）
     subgraph "Application Layer - Controllers"
-        direction LR
+        direction TB
         
         subgraph "User Controllers"
             direction TB
@@ -240,7 +240,7 @@ flowchart TD
     
     %% 服务层
     subgraph "Service Layer"
-        direction LR
+        direction TB
         
         subgraph "User Services"
             direction TB
@@ -272,7 +272,7 @@ flowchart TD
     
     %% 基础设施层
     subgraph "Infrastructure Layer"
-        direction LR
+        direction TB
         
         subgraph "User Repositories"
             direction TB
@@ -307,7 +307,7 @@ flowchart TD
     
     %% 数据库层
     subgraph "Database Layer"
-        direction LR
+        direction TB
         MONGO[("MongoDB\n(OpenRTB & Segments)")]
         H2[("H2 Database\n(User Data)")]
         REDIS[("Redis\n(Cache & Metrics)")]
