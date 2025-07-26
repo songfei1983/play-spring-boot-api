@@ -43,6 +43,8 @@ flowchart TD
         subgraph "Ads Controllers"
             direction TB
             BC["BidController"]
+            BRMC["BidRequestMetricsController"]
+            USC["UserSegmentController"]
         end
     end
     
@@ -74,6 +76,7 @@ flowchart TD
             FDS["FraudDetectionService"]
             BUS["BudgetService"]
             CS["CampaignService"]
+            BRMS["BidRequestMetricsService"]
         end
     end
     
@@ -105,6 +108,8 @@ flowchart TD
             DEV["Device"]
             USR["User (OpenRTB)"]
             BC_MODEL["BidCandidate"]
+            BRM["BidRequestMetrics"]
+            BRSD["BidRequestStatsDTO"]
         end
     end
     
@@ -134,6 +139,7 @@ flowchart TD
             CR["CampaignRepository"]
             IR["InventoryRepository"]
             BSR["BidStatisticsRepository"]
+            BRMR["BidRequestMetricsRepository"]
         end
         
         subgraph "Data Services"
@@ -148,6 +154,7 @@ flowchart TD
         direction LR
         MONGO[("MongoDB\n(OpenRTB & Segments)")]
         H2[("H2 Database\n(User Data)")]
+        REDIS[("Redis\n(Cache & Metrics)")]
     end
     
     %% 配置和工具层
@@ -169,8 +176,9 @@ flowchart TD
     API --> ATC
     API --> PHC
     API --> BC
-    API --> UPFC
+    API --> BRMC
     API --> USC
+    API --> UPFC
     API --> USMC
     
     UC --> US
@@ -178,8 +186,9 @@ flowchart TD
     ATC --> ATS
     PHC --> PHS
     BC --> BS
-    UPFC --> UPFS
+    BRMC --> BRMS
     USC --> USS
+    UPFC --> UPFS
     USMC --> USMS
     
     US --> UR
@@ -204,6 +213,7 @@ flowchart TD
     BS --> FDS
     BS --> BUS
     BS --> SFS
+    BS --> BRMS
     
     BA --> CS
     BA --> SFS
@@ -216,6 +226,9 @@ flowchart TD
     ORDS --> CR
     ORDS --> IR
     ORDS --> BSR
+    
+    BRMS --> BRMR
+    BRMS --> REDIS
     
     UR --> H2
     UPR --> H2
@@ -232,6 +245,7 @@ flowchart TD
     CR --> MONGO
     IR --> MONGO
     BSR --> MONGO
+    BRMR --> MONGO
     
     ORDS --> MONGO
     URS --> H2
@@ -246,11 +260,11 @@ flowchart TD
     classDef database fill:#ffebee
     classDef external fill:#f5f5f5
     
-    class UC,UPC,ATC,PHC,BC,UPFC,USC,USMC controller
-    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS,CS,UPFS,USS,USMS,SFS service
-    class UD,UPD,ATD,PHD,BR,BRE,IMP,DEV,USR,BC_MODEL,UPFD,USD,USMD,SRD domain
-    class UR,UPR,ATR,PHR,BRR,BRRE,CR,IR,BSR,UPFR,USR_SEG,USMR repository
-    class MONGO,H2 database
+    class UC,UPC,ATC,PHC,BC,BRMC,USC,UPFC,USMC controller
+    class US,UPS,ATS,PHS,BS,BA,ASF,FDS,BUS,CS,BRMS,UPFS,USS,USMS,SFS service
+    class UD,UPD,ATD,PHD,BR,BRE,IMP,DEV,USR,BC_MODEL,BRM,BRSD,UPFD,USD,USMD,SRD domain
+    class UR,UPR,ATR,PHR,BRR,BRRE,CR,IR,BSR,BRMR,UPFR,USR_SEG,USMR repository
+    class MONGO,H2,REDIS database
     class Client,ADX,DSP,NGINX external
 ```
 
@@ -269,11 +283,18 @@ sequenceDiagram
     participant SFS as SegmentFilterService
     participant UPFS as UserProfileService
     participant ORDS as OpenRTBDataService
+    participant BRMS as BidRequestMetricsService
     participant MONGO as MongoDB
     participant H2 as H2Database
+    participant REDIS as Redis
     
     ADX->>BC: Bid Request (OpenRTB)
     BC->>BS: Process Bid Request
+    
+    %% 统计记录
+    BS->>BRMS: Record Bid Request
+    BRMS->>REDIS: Update Real-time Counters
+    BRMS->>MONGO: Store Metrics Data
     
     %% 用户画像和分段匹配
     BS->>SFS: Match User Segments
@@ -346,7 +367,8 @@ flowchart TD
         direction LR
         MONGO_RT[("MongoDB\n(OpenRTB & Segments)")]
         H2_USER[("H2\n(User Data)")]
-        CACHE["Redis Cache"]
+        REDIS_CACHE["Redis Cache"]
+        REDIS_METRICS["Redis Metrics"]
     end
     
     %% 数据输出层
@@ -373,18 +395,21 @@ flowchart TD
     H2_USER --> PROFILE
     
     %% 缓存层连接
-    MONGO_RT --> CACHE
-    H2_USER --> CACHE
+    MONGO_RT --> REDIS_CACHE
+    H2_USER --> REDIS_CACHE
+    RT --> REDIS_METRICS
     
     %% 输出层连接
-    CACHE --> API_RESP
+    REDIS_CACHE --> API_RESP
+    REDIS_METRICS --> API_RESP
     MONGO_RT --> API_RESP
     H2_USER --> ANALYTICS
     H2_USER --> REPORTS
     MONGO_RT --> SEGMENTS
     
     %% 机器学习连接
-    ML --> CACHE
+    ML --> REDIS_CACHE
+    ML --> REDIS_METRICS
     MONGO_RT --> ML
     H2_USER --> ML
     SEGMENT --> ML
@@ -419,7 +444,8 @@ graph TB
     
     %% 缓存层
     subgraph "Cache Tier"
-        REDIS["Redis Cluster"]
+        REDIS_CLUSTER["Redis Cluster"]
+        REDIS_METRICS_CLUSTER["Redis Metrics Cluster"]
     end
     
     %% 监控
@@ -446,9 +472,12 @@ graph TB
     APP2 --> H2_DB
     APP3 --> H2_DB
     
-    APP1 --> REDIS
-    APP2 --> REDIS
-    APP3 --> REDIS
+    APP1 --> REDIS_CLUSTER
+    APP1 --> REDIS_METRICS_CLUSTER
+    APP2 --> REDIS_CLUSTER
+    APP2 --> REDIS_METRICS_CLUSTER
+    APP3 --> REDIS_CLUSTER
+    APP3 --> REDIS_METRICS_CLUSTER
     
     APP1 --> PROMETHEUS
     APP2 --> PROMETHEUS
@@ -464,10 +493,11 @@ graph TB
 
 ### 后端技术栈
 - **框架**: Spring Boot 3.x
-- **数据库**: MongoDB (OpenRTB数据), H2 (用户数据)
-- **缓存**: Redis
+- **数据库**: MongoDB (OpenRTB数据 & 用户分段), H2 (用户数据)
+- **缓存**: Redis (数据缓存 & 实时指标)
 - **构建工具**: Maven
 - **容器化**: Docker + Docker Compose
+- **配置管理**: 多环境配置支持 (MEMORY/H2/MONGODB)
 
 ### 前端技术栈
 - **框架**: React 19.x
@@ -511,12 +541,26 @@ graph TB
 
 ### 4. 高性能设计
 - 异步处理
-- 缓存策略
+- Redis缓存策略
 - 数据库优化
 - 负载均衡
+- 实时统计计数器
 
 ### 5. 可观测性
 - 全面的日志记录
 - 性能监控
 - 健康检查
 - 错误追踪
+- 实时指标系统
+
+### 6. 多数据源支持
+- MongoDB (OpenRTB数据 & 用户分段)
+- H2 (用户数据)
+- Redis (缓存 & 实时指标)
+- 支持多环境配置
+
+### 7. 用户分段功能
+- 复杂的用户分段规则
+- 实时分段匹配
+- 定向投放支持
+- 用户画像增强
