@@ -103,7 +103,17 @@ public class ActivityTrackController {
      * 根据活动类型获取行动轨迹列表
      */
     @GetMapping("/type/{activityType}")
-    public ResponseEntity<List<ActivityTrack>> getTracksByActivityType(@PathVariable String activityType) {
+    @Operation(summary = "根据活动类型获取活动轨迹", description = "获取指定活动类型的所有活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> getTracksByActivityType(
+            @Parameter(description = "活动类型", required = true, example = "页面访问")
+            @PathVariable String activityType) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByType(activityType);
             return ResponseEntity.ok(tracks);
@@ -118,8 +128,18 @@ public class ActivityTrackController {
      * 根据时间范围获取行动轨迹列表
      */
     @GetMapping("/time-range")
+    @Operation(summary = "根据时间范围获取活动轨迹", description = "获取指定时间范围内的所有活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<ActivityTrack>> getTracksByTimeRange(
+            @Parameter(description = "开始时间", required = true, example = "2024-01-01T00:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @Parameter(description = "结束时间", required = true, example = "2024-12-31T23:59:59")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByTimeRange(startTime, endTime);
@@ -135,7 +155,17 @@ public class ActivityTrackController {
      * 根据设备类型获取行动轨迹列表
      */
     @GetMapping("/device/{deviceType}")
-    public ResponseEntity<List<ActivityTrack>> getTracksByDeviceType(@PathVariable String deviceType) {
+    @Operation(summary = "根据设备类型获取活动轨迹", description = "获取指定设备类型的所有活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> getTracksByDeviceType(
+            @Parameter(description = "设备类型", required = true, example = "mobile")
+            @PathVariable String deviceType) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByDeviceType(deviceType);
             return ResponseEntity.ok(tracks);
@@ -150,7 +180,17 @@ public class ActivityTrackController {
      * 根据位置关键词搜索行动轨迹
      */
     @GetMapping("/search")
-    public ResponseEntity<List<ActivityTrack>> searchTracksByLocation(@RequestParam String keyword) {
+    @Operation(summary = "根据位置关键词搜索活动轨迹", description = "根据位置关键词搜索相关的活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> searchTracksByLocation(
+            @Parameter(description = "位置关键词", required = true, example = "北京")
+            @RequestParam String keyword) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByLocationKeyword(keyword);
             return ResponseEntity.ok(tracks);
@@ -165,7 +205,17 @@ public class ActivityTrackController {
      * 根据会话ID获取行动轨迹列表
      */
     @GetMapping("/session/{sessionId}")
-    public ResponseEntity<List<ActivityTrack>> getTracksBySessionId(@PathVariable String sessionId) {
+    @Operation(summary = "根据会话ID获取活动轨迹", description = "获取指定会话ID的所有活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> getTracksBySessionId(
+            @Parameter(description = "会话ID", required = true, example = "session123")
+            @PathVariable String sessionId) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesBySessionId(sessionId);
             return ResponseEntity.ok(tracks);
@@ -180,7 +230,17 @@ public class ActivityTrackController {
      * 根据页面URL获取行动轨迹列表
      */
     @GetMapping("/page")
-    public ResponseEntity<List<ActivityTrack>> getTracksByPageUrl(@RequestParam String pageUrl) {
+    @Operation(summary = "根据页面URL获取活动轨迹", description = "获取指定页面URL的所有活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> getTracksByPageUrl(
+            @Parameter(description = "页面URL", required = true, example = "/home")
+            @RequestParam String pageUrl) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByPageUrl(pageUrl);
             return ResponseEntity.ok(tracks);
@@ -195,8 +255,18 @@ public class ActivityTrackController {
      * 获取用户最近的行动轨迹
      */
     @GetMapping("/user/{userId}/recent")
+    @Operation(summary = "获取用户最近的活动轨迹", description = "获取指定用户最近的活动轨迹记录")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户最近活动轨迹",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<ActivityTrack>> getRecentTracksByUserId(
-            @PathVariable Long userId, 
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId,
+            @Parameter(description = "限制数量", required = false, example = "10")
             @RequestParam(defaultValue = "10") int limit) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getRecentActivitiesByUserId(userId, limit);
@@ -212,9 +282,20 @@ public class ActivityTrackController {
      * 获取用户指定时间范围内的行动轨迹
      */
     @GetMapping("/user/{userId}/time-range")
+    @Operation(summary = "获取用户指定时间范围内的活动轨迹", description = "获取指定用户在特定时间范围内的活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户时间范围内活动轨迹",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<ActivityTrack>> getUserTracksInTimeRange(
+            @Parameter(description = "用户ID", required = true, example = "1")
             @PathVariable Long userId,
+            @Parameter(description = "开始时间", required = true, example = "2024-01-01T00:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @Parameter(description = "结束时间", required = true, example = "2024-12-31T23:59:59")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
         try {
             List<ActivityTrack> tracks = activityTrackService.getActivitiesByUserId(userId);
@@ -236,7 +317,18 @@ public class ActivityTrackController {
      * 记录用户行动轨迹
      */
     @PostMapping
-    public ResponseEntity<ActivityTrack> recordTrack(@RequestBody ActivityTrack track) {
+    @Operation(summary = "记录用户活动轨迹", description = "创建新的用户活动轨迹记录")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "成功创建活动轨迹",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<ActivityTrack> recordTrack(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "活动轨迹信息", required = true,
+                    content = @Content(schema = @Schema(implementation = ActivityTrack.class)))
+            @RequestBody ActivityTrack track) {
         try {
             ActivityTrack recordedTrack = activityTrackService.recordActivity(track);
             return ResponseEntity.status(HttpStatus.CREATED).body(recordedTrack);
@@ -251,7 +343,18 @@ public class ActivityTrackController {
      * 批量记录行动轨迹
      */
     @PostMapping("/batch")
-    public ResponseEntity<List<ActivityTrack>> recordTracks(@RequestBody List<ActivityTrack> tracks) {
+    @Operation(summary = "批量记录活动轨迹", description = "批量创建多个活动轨迹记录")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "成功批量创建活动轨迹",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<ActivityTrack>> recordTracks(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "活动轨迹列表", required = true,
+                    content = @Content(schema = @Schema(implementation = ActivityTrack.class)))
+            @RequestBody List<ActivityTrack> tracks) {
         try {
             List<ActivityTrack> recordedTracks = activityTrackService.recordActivities(tracks);
             return ResponseEntity.status(HttpStatus.CREATED).body(recordedTracks);
@@ -266,7 +369,21 @@ public class ActivityTrackController {
      * 更新行动轨迹
      */
     @PutMapping("/{id}")
-    public ResponseEntity<ActivityTrack> updateTrack(@PathVariable Long id, @RequestBody ActivityTrack track) {
+    @Operation(summary = "更新活动轨迹", description = "根据ID更新活动轨迹信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功更新活动轨迹",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ActivityTrack.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "404", description = "活动轨迹不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<ActivityTrack> updateTrack(
+            @Parameter(description = "轨迹ID", required = true, example = "1")
+            @PathVariable Long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "更新的活动轨迹信息", required = true,
+                    content = @Content(schema = @Schema(implementation = ActivityTrack.class)))
+            @RequestBody ActivityTrack track) {
         try {
             ActivityTrack updatedTrack = activityTrackService.updateActivity(id, track);
             return ResponseEntity.ok(updatedTrack);
@@ -283,7 +400,15 @@ public class ActivityTrackController {
      * 删除行动轨迹
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteTrack(@PathVariable Long id) {
+    @Operation(summary = "删除活动轨迹", description = "根据ID删除活动轨迹")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功删除活动轨迹"),
+            @ApiResponse(responseCode = "404", description = "活动轨迹不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> deleteTrack(
+            @Parameter(description = "轨迹ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             boolean deleted = activityTrackService.deleteActivity(id);
             Map<String, Object> response = Map.of(
@@ -302,7 +427,15 @@ public class ActivityTrackController {
      * 删除用户的所有行动轨迹
      */
     @DeleteMapping("/user/{userId}")
-    public ResponseEntity<Map<String, Object>> deleteTracksByUserId(@PathVariable Long userId) {
+    @Operation(summary = "删除用户的所有活动轨迹", description = "删除指定用户的所有活动轨迹记录")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功删除用户活动轨迹"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> deleteTracksByUserId(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             // 获取用户所有活动并逐个删除
             List<ActivityTrack> userTracks = activityTrackService.getActivitiesByUserId(userId);
@@ -330,7 +463,14 @@ public class ActivityTrackController {
      * 删除指定时间之前的行动轨迹
      */
     @DeleteMapping("/cleanup")
+    @Operation(summary = "清理指定时间之前的活动轨迹", description = "删除指定时间之前的所有活动轨迹记录")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功清理活动轨迹"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<Map<String, Object>> deleteTracksBeforeTime(
+            @Parameter(description = "截止时间", required = true, example = "2024-01-01T00:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime beforeTime) {
         try {
             // 获取所有活动并删除指定时间之前的记录
@@ -362,6 +502,11 @@ public class ActivityTrackController {
      * 获取行动轨迹总数
      */
     @GetMapping("/count")
+    @Operation(summary = "获取活动轨迹总数", description = "获取系统中所有活动轨迹的总数量")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹总数"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<Map<String, Object>> getTrackCount() {
         try {
             long count = activityTrackService.getActivityCount();
@@ -379,7 +524,15 @@ public class ActivityTrackController {
      * 获取用户行动轨迹总数
      */
     @GetMapping("/user/{userId}/count")
-    public ResponseEntity<Map<String, Object>> getUserTrackCount(@PathVariable Long userId) {
+    @Operation(summary = "获取用户活动轨迹总数", description = "获取指定用户的活动轨迹总数量")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户活动轨迹总数"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> getUserTrackCount(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             long count = activityTrackService.getActivitiesByUserId(userId).size();
             Map<String, Object> response = Map.of(
@@ -399,7 +552,15 @@ public class ActivityTrackController {
      * 获取用户活动统计
      */
     @GetMapping("/user/{userId}/stats")
-    public ResponseEntity<Map<String, Object>> getUserActivityStats(@PathVariable Long userId) {
+    @Operation(summary = "获取用户活动统计", description = "获取指定用户的详细活动统计信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户活动统计"),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> getUserActivityStats(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             Map<String, Object> userStats = activityTrackService.getUserActivityStats(userId);
             long totalCount = activityTrackService.getActivitiesByUserId(userId).size();
@@ -422,6 +583,11 @@ public class ActivityTrackController {
      * 获取行动轨迹统计信息
      */
     @GetMapping("/stats")
+    @Operation(summary = "获取活动轨迹统计信息", description = "获取系统中所有活动轨迹的详细统计信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取活动轨迹统计信息"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<Map<String, Object>> getTrackStats() {
         try {
             long totalCount = activityTrackService.getActivityCount();

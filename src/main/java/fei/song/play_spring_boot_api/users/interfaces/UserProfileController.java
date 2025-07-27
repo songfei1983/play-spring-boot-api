@@ -75,7 +75,17 @@ public class UserProfileController {
      * 根据用户ID获取用户档案
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<UserProfile> getProfileByUserId(@PathVariable Long userId) {
+    @Operation(summary = "根据用户ID获取用户档案", description = "根据用户ID获取对应的用户档案信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "404", description = "用户档案不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<UserProfile> getProfileByUserId(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             UserProfile profile = userProfileService.getProfileByUserId(userId);
             return ResponseEntity.ok(profile);
@@ -90,7 +100,17 @@ public class UserProfileController {
      * 根据性别获取用户档案列表
      */
     @GetMapping("/gender/{gender}")
-    public ResponseEntity<List<UserProfile>> getProfilesByGender(@PathVariable String gender) {
+    @Operation(summary = "根据性别获取用户档案列表", description = "根据性别筛选用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<UserProfile>> getProfilesByGender(
+            @Parameter(description = "性别", required = true, example = "男")
+            @PathVariable String gender) {
         try {
             List<UserProfile> profiles = userProfileService.getProfilesByGender(gender);
             return ResponseEntity.ok(profiles);
@@ -105,8 +125,18 @@ public class UserProfileController {
      * 根据年龄范围获取用户档案列表
      */
     @GetMapping("/age")
+    @Operation(summary = "根据年龄范围获取用户档案列表", description = "根据最小年龄和最大年龄范围筛选用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<List<UserProfile>> getProfilesByAgeRange(
-            @RequestParam Integer minAge, 
+            @Parameter(description = "最小年龄", required = true, example = "18")
+            @RequestParam Integer minAge,
+            @Parameter(description = "最大年龄", required = true, example = "65")
             @RequestParam Integer maxAge) {
         try {
             List<UserProfile> profiles = userProfileService.getProfilesByAgeRange(minAge, maxAge);
@@ -122,7 +152,17 @@ public class UserProfileController {
      * 根据职业获取用户档案列表
      */
     @GetMapping("/occupation/{occupation}")
-    public ResponseEntity<List<UserProfile>> getProfilesByOccupation(@PathVariable String occupation) {
+    @Operation(summary = "根据职业获取用户档案列表", description = "根据职业筛选用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<UserProfile>> getProfilesByOccupation(
+            @Parameter(description = "职业", required = true, example = "软件工程师")
+            @PathVariable String occupation) {
         try {
             List<UserProfile> profiles = userProfileService.getProfilesByOccupation(occupation);
             return ResponseEntity.ok(profiles);
@@ -137,7 +177,17 @@ public class UserProfileController {
      * 根据地址关键词搜索用户档案
      */
     @GetMapping("/search")
-    public ResponseEntity<List<UserProfile>> searchProfilesByAddress(@RequestParam String keyword) {
+    @Operation(summary = "根据地址关键词搜索用户档案", description = "根据地址关键词搜索相关的用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功获取用户档案列表",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<List<UserProfile>> searchProfilesByAddress(
+            @Parameter(description = "地址关键词", required = true, example = "北京")
+            @RequestParam String keyword) {
         try {
             List<UserProfile> profiles = userProfileService.searchProfilesByAddress(keyword);
             return ResponseEntity.ok(profiles);
@@ -180,7 +230,20 @@ public class UserProfileController {
      * 更新用户档案
      */
     @PutMapping("/{id}")
-    public ResponseEntity<UserProfile> updateProfile(@PathVariable Long id, @RequestBody UserProfile profile) {
+    @Operation(summary = "更新用户档案", description = "根据档案ID更新用户档案信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "用户档案更新成功",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "404", description = "用户档案不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<UserProfile> updateProfile(
+            @Parameter(description = "档案ID", required = true, example = "1")
+            @PathVariable Long id,
+            @Parameter(description = "更新的用户档案信息", required = true)
+            @RequestBody UserProfile profile) {
         try {
             UserProfile updatedProfile = userProfileService.updateProfile(id, profile);
             return ResponseEntity.ok(updatedProfile);
@@ -197,7 +260,20 @@ public class UserProfileController {
      * 更新用户档案（根据用户ID）
      */
     @PutMapping("/user/{userId}")
-    public ResponseEntity<UserProfile> updateProfileByUserId(@PathVariable Long userId, @RequestBody UserProfile profile) {
+    @Operation(summary = "根据用户ID更新用户档案", description = "根据用户ID更新对应的用户档案信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "用户档案更新成功",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "404", description = "用户档案不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<UserProfile> updateProfileByUserId(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId,
+            @Parameter(description = "更新的用户档案信息", required = true)
+            @RequestBody UserProfile profile) {
         try {
             UserProfile updatedProfile = userProfileService.updateProfileByUserId(userId, profile);
             return ResponseEntity.ok(updatedProfile);
@@ -214,7 +290,16 @@ public class UserProfileController {
      * 删除用户档案
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteProfile(@PathVariable Long id) {
+    @Operation(summary = "删除用户档案", description = "根据档案ID删除用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "用户档案删除成功",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "用户档案不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> deleteProfile(
+            @Parameter(description = "档案ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             boolean deleted = userProfileService.deleteProfile(id);
             Map<String, Object> response = Map.of(
@@ -233,7 +318,16 @@ public class UserProfileController {
      * 根据用户ID删除用户档案
      */
     @DeleteMapping("/user/{userId}")
-    public ResponseEntity<Map<String, Object>> deleteProfileByUserId(@PathVariable Long userId) {
+    @Operation(summary = "根据用户ID删除用户档案", description = "根据用户ID删除对应的用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "用户档案删除成功",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "用户档案不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> deleteProfileByUserId(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             boolean deleted = userProfileService.deleteProfileByUserId(userId);
             Map<String, Object> response = Map.of(
@@ -252,7 +346,15 @@ public class UserProfileController {
      * 检查用户是否有档案
      */
     @GetMapping("/user/{userId}/exists")
-    public ResponseEntity<Map<String, Object>> hasProfile(@PathVariable Long userId) {
+    @Operation(summary = "检查用户是否有档案", description = "检查指定用户ID是否存在对应的用户档案")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "成功检查用户档案存在性",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<Map<String, Object>> hasProfile(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId) {
         try {
             boolean exists = userProfileService.hasProfile(userId);
             Map<String, Object> response = Map.of(

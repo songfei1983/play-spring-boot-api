@@ -92,7 +92,19 @@ public class UserController {
     
     @PutMapping("/{id}")
     @Operation(summary = "根据ID更新用户", description = "根据用户ID更新用户信息")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "用户更新成功",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "404", description = "用户不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<?> updateUser(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long id,
+            @Parameter(description = "更新的用户信息", required = true)
+            @RequestBody User userDetails) {
         try {
             Optional<User> updatedUser = userService.updateUser(id, userDetails);
             return updatedUser.map(ResponseEntity::ok)
@@ -106,7 +118,14 @@ public class UserController {
     
     @DeleteMapping("/{id}")
     @Operation(summary = "根据ID删除用户", description = "根据用户ID删除用户")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "用户删除成功"),
+            @ApiResponse(responseCode = "404", description = "用户不存在"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    public ResponseEntity<?> deleteUser(
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long id) {
         try {
             boolean deleted = userService.deleteUser(id);
             return deleted ? ResponseEntity.noContent().build() 
