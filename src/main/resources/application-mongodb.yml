@@ -2,7 +2,7 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017
+      uri: mongodb://admin:password123@localhost:27017/openrtb?authSource=admin
       database: openrtb
       auto-index-creation: true
       connection-pool:
