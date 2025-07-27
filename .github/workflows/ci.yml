@@ -242,7 +242,7 @@ jobs:
         env:
           MONGO_INITDB_DATABASE: openrtb
         options: >-
-          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping: 1}).ok' --host localhost:27017"
+          --health-cmd "mongo --quiet --eval 'db.runCommand({ping: 1}).ok'"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -310,19 +310,19 @@ jobs:
         echo "✅ Port 27017 is accessible"
         
         # 验证MongoDB服务响应
-        echo "🗄️ Testing MongoDB service response..."
-        for i in {1..10}; do
-          if mongosh --quiet --eval "db.runCommand({ping: 1}).ok" localhost:27017/test >/dev/null 2>&1; then
-            echo "✅ MongoDB service is responding"
-            break
-          fi
-          echo "⏳ Attempt $i/10: MongoDB not responding yet, waiting..."
-          sleep 2
-        done
-        
-        # 创建测试数据库
-        echo "📊 Initializing test database..."
-        mongosh --quiet localhost:27017/openrtb --eval "db.test.insertOne({test: true}); db.test.deleteOne({test: true});"
+         echo "🗄️ Testing MongoDB service response..."
+         for i in {1..10}; do
+           if mongo --quiet --eval "db.runCommand({ping: 1}).ok" localhost:27017/test >/dev/null 2>&1; then
+             echo "✅ MongoDB service is responding"
+             break
+           fi
+           echo "⏳ Attempt $i/10: MongoDB not responding yet, waiting..."
+           sleep 2
+         done
+         
+         # 创建测试数据库
+         echo "📊 Initializing test database..."
+         mongo --quiet localhost:27017/openrtb --eval "db.test.insertOne({test: true}); db.test.deleteOne({test: true});"
         echo "✅ MongoDB is fully ready for E2E tests"
     
     - name: Start and verify backend server
