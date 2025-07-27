@@ -1,7 +1,5 @@
 # MongoDB环境配置
 spring:
-  profiles:
-    active: mongodb
   data:
     mongodb:
       uri: mongodb://localhost:27017
