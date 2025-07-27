@@ -19,7 +19,6 @@ public class UserRepositoryService {
     private final UserRepository memoryUserRepository;
     private final UserJpaRepository jpaUserRepository;
     
-    @Autowired
     public UserRepositoryService(
             DataSourceConfig.DataSourceProperties dataSourceProperties,
             @Autowired(required = false) UserRepository memoryUserRepository,

@@ -1,0 +1,93 @@
+# 广告系统配置
+ads:
+  # 反欺诈检测配置
+  fraud-detection:
+    enabled: true
+    risk-threshold: 0.7
+    max-clicks-per-hour: 100
+    max-impressions-per-hour: 1000
+    ip-blacklist:
+      - "192.168.1.100"
+      - "10.0.0.50"
+    domain-whitelist:
+      - "example.com"
+      - "trusted-site.com"
+    suspicious-user-agent-patterns:
+      - ".*bot.*"
+      - ".*crawler.*"
+      - ".*spider.*"
+      - ".*scraper.*"
+      - ".*headless.*"
+  
+  # 竞价算法配置
+  bidding:
+    default-currency: "USD"
+    auction-type: 2  # 第二价格拍卖
+    min-bid-price: 0.01
+    max-bid-price: 100.0
+    timeout-ms: 100
+    weights:
+      user-value: 0.3
+      context-relevance: 0.25
+      competition: 0.2
+      quality: 0.25
+  
+  # 服务器配置
+  server:
+    seat-id: "seat_openrtb_demo"
+    max-concurrent-requests: 1000
+    request-timeout-ms: 200
+    enable-request-logging: true
+    enable-performance-monitoring: true
+    open-rtb-version: "2.5"
+  
+  # 预算管理配置
+  budget:
+    enabled: true
+    check-timeout-ms: 50
+    reservation-ttl-seconds: 300
+    default-daily-budget: 1000.0
+    alert-threshold: 0.8
+
+# Spring Boot 配置
+spring:
+  profiles:
+    active: ads
+  
+  # 启用定时任务
+  task:
+    scheduling:
+      enabled: true
+      pool:
+        size: 5
+  
+  # Jackson 配置
+  jackson:
+    default-property-inclusion: non-null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# 日志配置
+logging:
+  level:
+    fei.song.play_spring_boot_api.ads: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  simple:
+    metrics:
+      export:
+        enabled: true

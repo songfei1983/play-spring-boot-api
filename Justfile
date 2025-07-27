@@ -86,6 +86,18 @@ test-e2e:
     echo "停止API服务..."
     kill $API_PID 2>/dev/null
 
+# 运行所有 OpenRTB 测试
+test-openrtb:
+    ./run-openrtb-tests.sh
+
+# 运行 OpenRTB 集成测试
+test-openrtb-integration:
+    ./mvnw test -Dtest=OpenRTBIntegrationTest
+
+# 运行 OpenRTB 端到端测试
+test-openrtb-e2e:
+    ./mvnw test -Dtest=OpenRTBEndToEndTest
+
 # 🚀 开发相关命令
 
 # 启动Spring Boot应用（默认配置）

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bid Request 统计面板</title>
+    
+    <!-- Material-UI CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Material-UI -->
+    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.development.js"></script>
+    
+    <!-- Recharts for charts -->
+    <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+        }
+        #root {
+            min-height: 100vh;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">
+            <div>加载中...</div>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const {
+            Card,
+            CardContent,
+            CardHeader,
+            Grid,
+            Typography,
+            Box,
+            CircularProgress,
+            Alert,
+            Button,
+            Select,
+            MenuItem,
+            FormControl,
+            InputLabel,
+            Table,
+            TableBody,
+            TableCell,
+            TableContainer,
+            TableHead,
+            TableRow,
+            Paper,
+            Chip,
+            ThemeProvider,
+            createTheme,
+            CssBaseline
+        } = MaterialUI;
+        
+        const {
+            BarChart,
+            Bar,
+            XAxis,
+            YAxis,
+            CartesianGrid,
+            Tooltip,
+            Legend,
+            PieChart,
+            Pie,
+            Cell,
+            ResponsiveContainer
+        } = Recharts;
+
+        // 创建主题
+        const theme = createTheme({
+            palette: {
+                primary: {
+                    main: '#1976d2',
+                },
+                secondary: {
+                    main: '#dc004e',
+                },
+            },
+        });
+
+        const BidRequestMetrics = () => {
+            const [realTimeStats, setRealTimeStats] = useState(null);
+            const [adSlotStats, setAdSlotStats] = useState([]);
+            const [dspStats, setDspStats] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [dateRange, setDateRange] = useState('7');
+            const [autoRefresh, setAutoRefresh] = useState(true);
+
+            const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+
+            // 获取实时统计数据
+            const fetchRealTimeStats = async () => {
+                try {
+                    const response = await fetch('/api/v1/bid-request-metrics/realtime');
+                    if (!response.ok) throw new Error('获取实时数据失败');
+                    const data = await response.json();
+                    setRealTimeStats(data);
+                } catch (err) {
+                    console.error('获取实时统计失败:', err);
+                    setError(err.message);
+                }
+            };
+
+            // 获取广告位类型统计
+            const fetchAdSlotStats = async () => {
+                try {
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(endDate.getDate() - parseInt(dateRange));
+                    
+                    const params = new URLSearchParams({
+                        startDate: startDate.toISOString().split('T')[0],
+                        endDate: endDate.toISOString().split('T')[0]
+                    });
+                    
+                    const response = await fetch(`/api/v1/bid-request-metrics/ad-slot-types?${params}`);
+                    if (!response.ok) throw new Error('获取广告位统计失败');
+                    const data = await response.json();
+                    setAdSlotStats(data);
+                } catch (err) {
+                    console.error('获取广告位统计失败:', err);
+                    setError(err.message);
+                }
+            };
+
+            // 获取DSP来源统计
+            const fetchDspStats = async () => {
+                try {
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(endDate.getDate() - parseInt(dateRange));
+                    
+                    const params = new URLSearchParams({
+                        startDate: startDate.toISOString().split('T')[0],
+                        endDate: endDate.toISOString().split('T')[0]
+                    });
+                    
+                    const response = await fetch(`/api/v1/bid-request-metrics/dsp-sources?${params}`);
+                    if (!response.ok) throw new Error('获取DSP统计失败');
+                    const data = await response.json();
+                    setDspStats(data);
+                } catch (err) {
+                    console.error('获取DSP统计失败:', err);
+                    setError(err.message);
+                }
+            };
+
+            // 加载所有数据
+            const loadAllData = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    await Promise.all([
+                        fetchRealTimeStats(),
+                        fetchAdSlotStats(),
+                        fetchDspStats()
+                    ]);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // 初始加载和自动刷新
+            useEffect(() => {
+                loadAllData();
+            }, [dateRange]);
+
+            useEffect(() => {
+                if (autoRefresh) {
+                    const interval = setInterval(fetchRealTimeStats, 30000);
+                    return () => clearInterval(interval);
+                }
+            }, [autoRefresh]);
+
+            // 格式化数字
+            const formatNumber = (num) => {
+                if (num >= 1000000) {
+                    return (num / 1000000).toFixed(1) + 'M';
+                } else if (num >= 1000) {
+                    return (num / 1000).toFixed(1) + 'K';
+                }
+                return num?.toString() || '0';
+            };
+
+            // 格式化百分比
+            const formatPercentage = (num) => {
+                return `${(num || 0).toFixed(2)}%`;
+            };
+
+            if (loading && !realTimeStats) {
+                return React.createElement(Box, {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "400px"
+                }, React.createElement(CircularProgress));
+            }
+
+            return React.createElement(Box, { sx: { p: 3 } }, [
+                // 页面标题
+                React.createElement(Box, {
+                    key: "header",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 3
+                }, [
+                    React.createElement(Typography, {
+                        key: "title",
+                        variant: "h4",
+                        component: "h1"
+                    }, "Bid Request 统计面板"),
+                    React.createElement(Box, {
+                        key: "controls",
+                        display: "flex",
+                        gap: 2,
+                        alignItems: "center"
+                    }, [
+                        React.createElement(FormControl, {
+                            key: "dateRange",
+                            size: "small",
+                            sx: { minWidth: 120 }
+                        }, [
+                            React.createElement(InputLabel, { key: "label" }, "时间范围"),
+                            React.createElement(Select, {
+                                key: "select",
+                                value: dateRange,
+                                label: "时间范围",
+                                onChange: (e) => setDateRange(e.target.value)
+                            }, [
+                                React.createElement(MenuItem, { key: "1", value: "1" }, "最近1天"),
+                                React.createElement(MenuItem, { key: "7", value: "7" }, "最近7天"),
+                                React.createElement(MenuItem, { key: "30", value: "30" }, "最近30天")
+                            ])
+                        ]),
+                        React.createElement(Button, {
+                            key: "refresh",
+                            variant: "outlined",
+                            onClick: loadAllData,
+                            disabled: loading
+                        }, "刷新"),
+                        React.createElement(Button, {
+                            key: "autoRefresh",
+                            variant: autoRefresh ? "contained" : "outlined",
+                            onClick: () => setAutoRefresh(!autoRefresh)
+                        }, autoRefresh ? '停止自动刷新' : '开启自动刷新')
+                    ])
+                ]),
+
+                // 错误提示
+                error && React.createElement(Alert, {
+                    key: "error",
+                    severity: "error",
+                    sx: { mb: 3 },
+                    onClose: () => setError(null)
+                }, error),
+
+                // 实时统计卡片
+                realTimeStats && React.createElement(Grid, {
+                    key: "realtime",
+                    container: true,
+                    spacing: 3,
+                    sx: { mb: 4 }
+                }, [
+                    React.createElement(Grid, { key: "total", item: true, xs: 12, sm: 6, md: 3 },
+                        React.createElement(Card, {},
+                            React.createElement(CardContent, {},
+                                React.createElement(Box, {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
+                                }, [
+                                    React.createElement(Box, { key: "content" }, [
+                                        React.createElement(Typography, {
+                                            key: "label",
+                                            color: "textSecondary",
+                                            gutterBottom: true
+                                        }, "总请求数"),
+                                        React.createElement(Typography, {
+                                            key: "value",
+                                            variant: "h4"
+                                        }, formatNumber(realTimeStats.totalRequests))
+                                    ])
+                                ])
+                            )
+                        )
+                    ),
+                    React.createElement(Grid, { key: "today", item: true, xs: 12, sm: 6, md: 3 },
+                        React.createElement(Card, {},
+                            React.createElement(CardContent, {},
+                                React.createElement(Box, {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
+                                }, [
+                                    React.createElement(Box, { key: "content" }, [
+                                        React.createElement(Typography, {
+                                            key: "label",
+                                            color: "textSecondary",
+                                            gutterBottom: true
+                                        }, "今日请求数"),
+                                        React.createElement(Typography, {
+                                            key: "value",
+                                            variant: "h4"
+                                        }, formatNumber(realTimeStats.todayRequests))
+                                    ])
+                                ])
+                            )
+                        )
+                    ),
+                    React.createElement(Grid, { key: "success", item: true, xs: 12, sm: 6, md: 3 },
+                        React.createElement(Card, {},
+                            React.createElement(CardContent, {},
+                                React.createElement(Box, {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
+                                }, [
+                                    React.createElement(Box, { key: "content" }, [
+                                        React.createElement(Typography, {
+                                            key: "label",
+                                            color: "textSecondary",
+                                            gutterBottom: true
+                                        }, "成功率"),
+                                        React.createElement(Typography, {
+                                            key: "value",
+                                            variant: "h4"
+                                        }, formatPercentage(realTimeStats.successRate))
+                                    ])
+                                ])
+                            )
+                        )
+                    ),
+                    React.createElement(Grid, { key: "response", item: true, xs: 12, sm: 6, md: 3 },
+                        React.createElement(Card, {},
+                            React.createElement(CardContent, {},
+                                React.createElement(Box, {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
+                                }, [
+                                    React.createElement(Box, { key: "content" }, [
+                                        React.createElement(Typography, {
+                                            key: "label",
+                                            color: "textSecondary",
+                                            gutterBottom: true
+                                        }, "平均响应时间"),
+                                        React.createElement(Typography, {
+                                            key: "value",
+                                            variant: "h4"
+                                        }, `${(realTimeStats.avgResponseTime || 0).toFixed(0)}ms`)
+                                    ])
+                                ])
+                            )
+                        )
+                    )
+                ]),
+
+                // 简化的统计信息
+                React.createElement(Grid, {
+                    key: "stats",
+                    container: true,
+                    spacing: 3
+                }, [
+                    React.createElement(Grid, { key: "adslot", item: true, xs: 12, md: 6 },
+                        React.createElement(Card, {},
+                            React.createElement(CardHeader, { title: "广告位类型统计" }),
+                            React.createElement(CardContent, {},
+                                adSlotStats.length > 0 ?
+                                    React.createElement(TableContainer, { component: Paper, variant: "outlined" },
+                                        React.createElement(Table, { size: "small" }, [
+                                            React.createElement(TableHead, { key: "head" },
+                                                React.createElement(TableRow, {}, [
+                                                    React.createElement(TableCell, { key: "type" }, "类型"),
+                                                    React.createElement(TableCell, { key: "requests", align: "right" }, "请求数"),
+                                                    React.createElement(TableCell, { key: "success", align: "right" }, "成功数"),
+                                                    React.createElement(TableCell, { key: "rate", align: "right" }, "成功率")
+                                                ])
+                                            ),
+                                            React.createElement(TableBody, { key: "body" },
+                                                adSlotStats.map((row, index) =>
+                                                    React.createElement(TableRow, { key: index }, [
+                                                        React.createElement(TableCell, { key: "type" },
+                                                            React.createElement(Chip, { label: row.adSlotType, size: "small" })
+                                                        ),
+                                                        React.createElement(TableCell, { key: "requests", align: "right" }, formatNumber(row.totalRequests)),
+                                                        React.createElement(TableCell, { key: "success", align: "right" }, formatNumber(row.successCount)),
+                                                        React.createElement(TableCell, { key: "rate", align: "right" }, formatPercentage(row.successRate))
+                                                    ])
+                                                )
+                                            )
+                                        ])
+                                    ) :
+                                    React.createElement(Typography, {
+                                        color: "textSecondary",
+                                        align: "center"
+                                    }, "暂无数据")
+                            )
+                        )
+                    ),
+                    React.createElement(Grid, { key: "dsp", item: true, xs: 12, md: 6 },
+                        React.createElement(Card, {},
+                            React.createElement(CardHeader, { title: "DSP来源统计" }),
+                            React.createElement(CardContent, {},
+                                dspStats.length > 0 ?
+                                    React.createElement(TableContainer, { component: Paper, variant: "outlined" },
+                                        React.createElement(Table, { size: "small" }, [
+                                            React.createElement(TableHead, { key: "head" },
+                                                React.createElement(TableRow, {}, [
+                                                    React.createElement(TableCell, { key: "source" }, "来源"),
+                                                    React.createElement(TableCell, { key: "requests", align: "right" }, "请求数"),
+                                                    React.createElement(TableCell, { key: "success", align: "right" }, "成功数"),
+                                                    React.createElement(TableCell, { key: "rate", align: "right" }, "成功率")
+                                                ])
+                                            ),
+                                            React.createElement(TableBody, { key: "body" },
+                                                dspStats.map((row, index) =>
+                                                    React.createElement(TableRow, { key: index }, [
+                                                        React.createElement(TableCell, { key: "source" },
+                                                            React.createElement(Chip, { label: row.dspSource, size: "small", color: "primary" })
+                                                        ),
+                                                        React.createElement(TableCell, { key: "requests", align: "right" }, formatNumber(row.totalRequests)),
+                                                        React.createElement(TableCell, { key: "success", align: "right" }, formatNumber(row.successCount)),
+                                                        React.createElement(TableCell, { key: "rate", align: "right" }, formatPercentage(row.successRate))
+                                                    ])
+                                                )
+                                            )
+                                        ])
+                                    ) :
+                                    React.createElement(Typography, {
+                                        color: "textSecondary",
+                                        align: "center"
+                                    }, "暂无数据")
+                            )
+                        )
+                    )
+                ]),
+
+                // 最后更新时间
+                realTimeStats && React.createElement(Box, {
+                    key: "timestamp",
+                    mt: 3,
+                    textAlign: "center"
+                },
+                    React.createElement(Typography, {
+                        variant: "caption",
+                        color: "textSecondary"
+                    }, `最后更新时间: ${new Date(realTimeStats.timestamp).toLocaleString()}`)
+                )
+            ]);
+        };
+
+        const App = () => {
+            return React.createElement(ThemeProvider, { theme }, [
+                React.createElement(CssBaseline, { key: "baseline" }),
+                React.createElement(BidRequestMetrics, { key: "metrics" })
+            ]);
+        };
+
+        // 渲染应用
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# MongoDB环境配置
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: openrtb
+      auto-index-creation: true
+      connection-pool:
+        max-size: 20
+        min-size: 5
+        max-wait-time-seconds: 2
+        max-connection-idle-time-seconds: 600
+        max-connection-life-time-seconds: 1800
+
+# 应用配置
+app:
+  datasource:
+    type: MONGODB
+    enable-jpa: false
+
+# MongoDB特定配置
+mongo:
+  enabled: true
+
+# 日志配置
+logging:
+  level:
+    org.springframework.data.mongodb: DEBUG
+    com.mongodb: INFO
+    fei.song.play_spring_boot_api.ads.infrastructure: DEBUG
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mongo:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
