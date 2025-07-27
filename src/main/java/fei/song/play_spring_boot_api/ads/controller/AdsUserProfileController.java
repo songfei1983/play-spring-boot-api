@@ -683,4 +683,33 @@ public class AdsUserProfileController {
         Map<String, Long> stats = Map.of("male", genderCount);
         return ResponseEntity.ok(stats);
     }
+
+    /**
+     * 全局异常处理
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleException(Exception e) {
+        log.error("API异常", e);
+        
+        Map<String, String> error = Map.of(
+            "error", "Internal Server Error",
+            "message", e.getMessage() != null ? e.getMessage() : "Unknown error",
+            "timestamp", String.valueOf(System.currentTimeMillis())
+        );
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("参数错误: {}", e.getMessage());
+        
+        Map<String, String> error = Map.of(
+            "error", "Bad Request",
+            "message", e.getMessage() != null ? e.getMessage() : "Invalid argument",
+            "timestamp", String.valueOf(System.currentTimeMillis())
+        );
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }

@@ -106,9 +106,14 @@ public class UserSegmentController {
     })
     public ResponseEntity<UserSegmentEntity> getSegment(
             @Parameter(description = "分段ID", example = "segment123") @PathVariable String segmentId) {
-        Optional<UserSegmentEntity> segment = userSegmentService.findSegmentById(segmentId);
-        return segment.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            Optional<UserSegmentEntity> segment = userSegmentService.findSegmentById(segmentId);
+            return segment.map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("获取分段异常", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**
