@@ -227,7 +227,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: [test]
-    timeout-minutes: 60
+    timeout-minutes: 45
     # 只在主分支或PR到主分支时运行E2E测试，且测试通过
     if: |
       (needs.test.result == 'success') &&
@@ -239,11 +239,14 @@ jobs:
         image: mongo:7.0
         ports:
           - 27017:27017
+        env:
+          MONGO_INITDB_DATABASE: openrtb
         options: >-
-          --health-cmd "mongosh --eval 'db.runCommand({ping: 1})'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping: 1}).ok' --host localhost:27017"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+          --health-start-period 10s
     
     steps:
     - name: Checkout code
@@ -286,32 +289,143 @@ jobs:
         ./mvnw clean package -DskipTests
         echo "Backend JAR built successfully"
     
-    - name: Wait for MongoDB to be ready
+    - name: Verify MongoDB readiness
       run: |
-        echo "Waiting for MongoDB to be ready..."
-        timeout 90 bash -c 'until nc -z localhost 27017; do echo "Waiting for MongoDB..."; sleep 2; done'
-        echo "MongoDB port is open, waiting for full initialization..."
-        sleep 20
-        echo "Testing MongoDB connection..."
-        timeout 30 bash -c 'until mongosh --eval "db.runCommand({ping: 1})" 2>/dev/null; do echo "Waiting for MongoDB to accept connections..."; sleep 3; done'
-        echo "MongoDB is ready"
+        echo "🔍 Verifying MongoDB service health..."
+        
+        # 等待MongoDB容器健康检查通过
+        echo "Waiting for MongoDB container health check..."
+        for i in {1..30}; do
+          if docker ps --filter "name=mongodb" --filter "health=healthy" | grep -q mongodb; then
+            echo "✅ MongoDB container is healthy"
+            break
+          fi
+          echo "⏳ Attempt $i/30: MongoDB container not healthy yet, waiting..."
+          sleep 2
+        done
+        
+        # 验证端口连通性
+        echo "🔌 Testing port connectivity..."
+        timeout 30 bash -c 'until nc -z localhost 27017; do echo "Waiting for port 27017..."; sleep 1; done'
+        echo "✅ Port 27017 is accessible"
+        
+        # 验证MongoDB服务响应
+        echo "🗄️ Testing MongoDB service response..."
+        for i in {1..10}; do
+          if mongosh --quiet --eval "db.runCommand({ping: 1}).ok" localhost:27017/test >/dev/null 2>&1; then
+            echo "✅ MongoDB service is responding"
+            break
+          fi
+          echo "⏳ Attempt $i/10: MongoDB not responding yet, waiting..."
+          sleep 2
+        done
+        
+        # 创建测试数据库
+        echo "📊 Initializing test database..."
+        mongosh --quiet localhost:27017/openrtb --eval "db.test.insertOne({test: true}); db.test.deleteOne({test: true});"
+        echo "✅ MongoDB is fully ready for E2E tests"
     
-    - name: Start backend server
+    - name: Start and verify backend server
       run: |
-        # 使用MongoDB配置启动后端服务
-        java -jar target/*.jar --spring.profiles.active=mongodb &
+        echo "🚀 Starting backend server..."
+        
+        # 启动后端服务
+        nohup java -jar target/*.jar --spring.profiles.active=mongodb \
+          --server.port=8080 \
+          --logging.level.org.springframework.data.mongodb=INFO \
+          --management.endpoints.web.exposure.include=health,info \
+          > backend.log 2>&1 &
         echo $! > backend.pid
-        # 等待后端服务启动，增加超时时间
-        timeout 180 bash -c 'until curl -f http://localhost:8080/actuator/health 2>/dev/null; do echo "Waiting for backend..."; sleep 5; done'
-        echo "Backend server started successfully"
+        
+        echo "📋 Backend PID: $(cat backend.pid)"
+        echo "⏳ Waiting for backend server to start..."
+        
+        # 分阶段验证后端启动
+        # 阶段1: 等待进程启动
+        sleep 5
+        if ! kill -0 $(cat backend.pid) 2>/dev/null; then
+          echo "❌ Backend process failed to start"
+          cat backend.log
+          exit 1
+        fi
+        echo "✅ Backend process is running"
+        
+        # 阶段2: 等待端口监听
+        echo "🔌 Waiting for port 8080 to be available..."
+        timeout 60 bash -c 'until nc -z localhost 8080; do echo "Waiting for port 8080..."; sleep 2; done'
+        echo "✅ Port 8080 is accessible"
+        
+        # 阶段3: 等待健康检查通过
+        echo "🏥 Waiting for health check to pass..."
+        for i in {1..24}; do
+          if curl -f -s http://localhost:8080/actuator/health >/dev/null 2>&1; then
+            echo "✅ Backend health check passed"
+            break
+          fi
+          echo "⏳ Attempt $i/24: Health check not ready, waiting..."
+          sleep 5
+        done
+        
+        # 验证健康状态
+        health_status=$(curl -s http://localhost:8080/actuator/health | jq -r '.status' 2>/dev/null || echo "UNKNOWN")
+        if [ "$health_status" != "UP" ]; then
+          echo "❌ Backend health check failed. Status: $health_status"
+          echo "📋 Backend logs:"
+          tail -50 backend.log
+          exit 1
+        fi
+        
+        echo "✅ Backend server is fully ready for E2E tests"
     
-    - name: Run Playwright tests
+    - name: Run Playwright E2E tests
       working-directory: ./frontend
-      run: npm run test:e2e
+      run: |
+        echo "🎭 Starting Playwright E2E tests..."
+        npm run test:e2e
+        echo "✅ E2E tests completed successfully"
     
-    - name: Stop servers
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: frontend/playwright-report/
+        retention-days: 7
+    
+    - name: Upload backend logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-logs
+        path: backend.log
+        retention-days: 3
+    
+    - name: Cleanup servers
       if: always()
       run: |
+        echo "🧹 Cleaning up services..."
+        
+        # 停止后端服务
         if [ -f backend.pid ]; then
-          kill $(cat backend.pid) || true
+          backend_pid=$(cat backend.pid)
+          if kill -0 $backend_pid 2>/dev/null; then
+            echo "Stopping backend server (PID: $backend_pid)..."
+            kill $backend_pid
+            # 等待进程优雅关闭
+            for i in {1..10}; do
+              if ! kill -0 $backend_pid 2>/dev/null; then
+                echo "✅ Backend server stopped gracefully"
+                break
+              fi
+              sleep 1
+            done
+            # 强制终止如果还在运行
+            if kill -0 $backend_pid 2>/dev/null; then
+              echo "Force killing backend server..."
+              kill -9 $backend_pid || true
+            fi
+          fi
+          rm -f backend.pid
         fi
+        
+        echo "✅ Cleanup completed"
