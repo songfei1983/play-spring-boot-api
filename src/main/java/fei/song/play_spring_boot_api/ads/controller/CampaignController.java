@@ -1,5 +1,6 @@
 package fei.song.play_spring_boot_api.ads.controller;
 
+import fei.song.play_spring_boot_api.ads.dto.CampaignDTO;
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.entity.CampaignEntity;
 import fei.song.play_spring_boot_api.ads.infrastructure.persistence.repository.CampaignRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -101,27 +102,30 @@ public class CampaignController {
         @ApiResponse(responseCode = "404", description = "广告活动不存在"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    public ResponseEntity<CampaignEntity> updateCampaign(
+    public ResponseEntity<CampaignDTO> updateCampaign(
             @Parameter(description = "广告活动ID", example = "campaign123") @PathVariable String id, 
-            @Parameter(description = "更新的广告活动信息") @RequestBody CampaignEntity campaignDetails) {
+            @Parameter(description = "更新的广告活动信息") @RequestBody CampaignDTO campaignDetails) {
         
         Optional<CampaignEntity> optionalCampaign = campaignRepository.findByCampaignId(id);
         if (optionalCampaign.isPresent()) {
             CampaignEntity campaign = optionalCampaign.get();
             
-            // 更新字段
-            campaign.setName(campaignDetails.getName());
-            campaign.setStatus(campaignDetails.getStatus());
-            campaign.setBudget(campaignDetails.getBudget());
-            campaign.setTargeting(campaignDetails.getTargeting());
-            campaign.setBidding(campaignDetails.getBidding());
-            campaign.setCreatives(campaignDetails.getCreatives());
-            campaign.setFrequencyCap(campaignDetails.getFrequencyCap());
-            campaign.setSchedule(campaignDetails.getSchedule());
+            // Convert DTO to entity and update fields
+            CampaignEntity updatedFields = campaignDetails.toEntity();
+            
+            campaign.setName(updatedFields.getName());
+            campaign.setStatus(updatedFields.getStatus());
+            campaign.setAdvertiserId(updatedFields.getAdvertiserId());
+            campaign.setBudget(updatedFields.getBudget());
+            campaign.setTargeting(updatedFields.getTargeting());
+            campaign.setBidding(updatedFields.getBidding());
+            campaign.setCreatives(updatedFields.getCreatives());
+            campaign.setFrequencyCap(updatedFields.getFrequencyCap());
+            campaign.setSchedule(updatedFields.getSchedule());
             campaign.setUpdatedAt(LocalDateTime.now());
             
-            CampaignEntity updatedCampaign = campaignRepository.save(campaign);
-            return ResponseEntity.ok(updatedCampaign);
+            CampaignEntity savedCampaign = campaignRepository.save(campaign);
+            return ResponseEntity.ok(CampaignDTO.fromEntity(savedCampaign));
         }
         return ResponseEntity.notFound().build();
     }

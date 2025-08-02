@@ -1,4 +1,4 @@
-import { User, UserProfile, ActivityTrack, PurchaseHistory } from './api';
+import { User, UserProfile, ActivityTrack, PurchaseHistory, Campaign } from './api';
 
 // Mock数据
 const mockUsers: User[] = [
@@ -93,6 +93,87 @@ const mockPurchases: PurchaseHistory[] = [
     completionTime: '2023-01-03T15:00:00Z',
     createdAt: '2023-01-01T12:00:00Z',
     updatedAt: '2023-01-03T15:00:00Z'
+  }
+];
+
+const mockCampaigns: Campaign[] = [
+  {
+    id: '1',
+    campaignId: 'CAMP001',
+    advertiserId: 'ADV001',
+    name: '春季促销活动',
+    status: 'active',
+    budget: {
+      totalBudget: 10000,
+      dailyBudget: 500,
+      spentTotal: 2500,
+      spentToday: 150,
+      currency: 'CNY'
+    },
+    bidding: {
+      bidStrategy: 'cpm',
+      maxBid: 10,
+      baseBid: 5
+    },
+    schedule: {
+      startDate: '2024-03-01',
+      endDate: '2024-03-31',
+      timezone: 'UTC'
+    },
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: '2',
+    campaignId: 'CAMP002',
+    advertiserId: 'ADV002',
+    name: '夏季新品推广',
+    status: 'paused',
+    budget: {
+      totalBudget: 15000,
+      dailyBudget: 750,
+      spentTotal: 5000,
+      spentToday: 0,
+      currency: 'CNY'
+    },
+    bidding: {
+      bidStrategy: 'cpc',
+      maxBid: 2,
+      baseBid: 1
+    },
+    schedule: {
+      startDate: '2024-06-01',
+      endDate: '2024-08-31',
+      timezone: 'UTC'
+    },
+    createdAt: '2024-05-01T10:00:00Z',
+    updatedAt: '2024-05-01T10:00:00Z'
+  },
+  {
+    id: '3',
+    campaignId: 'CAMP003',
+    advertiserId: 'ADV001',
+    name: '双十一大促',
+    status: 'completed',
+    budget: {
+      totalBudget: 50000,
+      dailyBudget: 2000,
+      spentTotal: 50000,
+      spentToday: 0,
+      currency: 'CNY'
+    },
+    bidding: {
+      bidStrategy: 'cpa',
+      maxBid: 50,
+      baseBid: 30
+    },
+    schedule: {
+      startDate: '2023-11-01',
+      endDate: '2023-11-15',
+      timezone: 'UTC'
+    },
+    createdAt: '2023-10-01T10:00:00Z',
+    updatedAt: '2023-11-15T23:59:59Z'
   }
 ];
 
@@ -487,12 +568,111 @@ export const mockPurchaseHistoryApi = {
   }
 };
 
+// Mock广告活动API
+export const mockCampaignApi = {
+  getAllCampaigns: async (page: number = 0, size: number = 10) => {
+    await delay();
+    const startIndex = page * size;
+    const endIndex = startIndex + size;
+    const paginatedCampaigns = mockCampaigns.slice(startIndex, endIndex);
+    return mockResponse({
+      content: paginatedCampaigns,
+      totalElements: mockCampaigns.length,
+      totalPages: Math.ceil(mockCampaigns.length / size),
+      size,
+      number: page
+    });
+  },
+
+  getCampaignById: async (id: string) => {
+    await delay();
+    const campaign = mockCampaigns.find(c => c.id === id);
+    if (!campaign) throw new Error('Campaign not found');
+    return mockResponse(campaign);
+  },
+
+  createCampaign: async (campaign: Campaign) => {
+    await delay();
+    const newCampaign = {
+      ...campaign,
+      id: String(Math.max(...mockCampaigns.map(c => parseInt(c.id || '0'))) + 1),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    mockCampaigns.push(newCampaign);
+    return mockResponse(newCampaign);
+  },
+
+  updateCampaign: async (id: string, campaign: Campaign) => {
+    await delay();
+    const index = mockCampaigns.findIndex(c => c.id === id);
+    if (index === -1) throw new Error('Campaign not found');
+    mockCampaigns[index] = {
+      ...campaign,
+      id,
+      updatedAt: new Date().toISOString()
+    };
+    return mockResponse(mockCampaigns[index]);
+  },
+
+  deleteCampaign: async (id: string) => {
+    await delay();
+    const index = mockCampaigns.findIndex(c => c.id === id);
+    if (index === -1) throw new Error('Campaign not found');
+    mockCampaigns.splice(index, 1);
+    return mockResponse({});
+  },
+
+  updateCampaignStatus: async (id: string, status: string) => {
+    await delay();
+    const index = mockCampaigns.findIndex(c => c.id === id);
+    if (index === -1) throw new Error('Campaign not found');
+    mockCampaigns[index].status = status;
+    mockCampaigns[index].updatedAt = new Date().toISOString();
+    return mockResponse(mockCampaigns[index]);
+  },
+
+  getCampaignsByAdvertiser: async (advertiserId: string) => {
+    await delay();
+    const campaigns = mockCampaigns.filter(c => c.advertiserId === advertiserId);
+    return mockResponse(campaigns);
+  },
+
+  getCampaignsByStatus: async (status: string) => {
+    await delay();
+    const campaigns = mockCampaigns.filter(c => c.status === status);
+    return mockResponse(campaigns);
+  },
+
+  getCampaignStatistics: async () => {
+    await delay();
+    const stats = {
+      total: mockCampaigns.length,
+      active: mockCampaigns.filter(c => c.status === 'active').length,
+      paused: mockCampaigns.filter(c => c.status === 'paused').length,
+      completed: mockCampaigns.filter(c => c.status === 'completed').length
+    };
+    return mockResponse(stats);
+  },
+
+  searchCampaigns: async (query: string) => {
+    await delay();
+    const campaigns = mockCampaigns.filter(c => 
+      c.name.toLowerCase().includes(query.toLowerCase()) ||
+      c.campaignId.toLowerCase().includes(query.toLowerCase()) ||
+      c.advertiserId.toLowerCase().includes(query.toLowerCase())
+    );
+    return mockResponse(campaigns);
+  }
+};
+
 // 导出所有Mock API
 export const mockApi = {
   userApi: mockUserApi,
   userProfileApi: mockUserProfileApi,
   activityTrackApi: mockActivityTrackApi,
-  purchaseHistoryApi: mockPurchaseHistoryApi
+  purchaseHistoryApi: mockPurchaseHistoryApi,
+  campaignApi: mockCampaignApi
 };
 
 export default mockApi;

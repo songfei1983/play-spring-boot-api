@@ -155,6 +155,75 @@ export interface PurchaseHistory {
   updatedAt?: string;
 }
 
+// 广告活动接口
+export interface Campaign {
+  id?: string;
+  campaignId: string;
+  advertiserId: string;
+  name: string;
+  status: string; // active, paused, completed
+  budget?: {
+    totalBudget?: number;
+    dailyBudget?: number;
+    spentTotal?: number;
+    spentToday?: number;
+    currency?: string;
+  };
+  targeting?: {
+    geo?: {
+      includedCountries?: string[];
+      excludedCountries?: string[];
+      includedRegions?: string[];
+      includedCities?: string[];
+    };
+    device?: {
+      deviceTypes?: number[];
+      operatingSystems?: string[];
+      browsers?: string[];
+    };
+    audience?: {
+      ageRange?: {
+        min?: number;
+        max?: number;
+      };
+      genders?: string[];
+      interests?: string[];
+    };
+    time?: {
+      daysOfWeek?: number[];
+      hoursOfDay?: number[];
+    };
+  };
+  bidding?: {
+    bidStrategy?: string; // cpm, cpc, cpa
+    maxBid?: number;
+    baseBid?: number;
+    bidAdjustments?: { [key: string]: number };
+  };
+  creatives?: {
+    creativeId?: string;
+    format?: string;
+    width?: number;
+    height?: number;
+    html?: string;
+    clickUrl?: string;
+    impressionTrackers?: string[];
+    clickTrackers?: string[];
+  }[];
+  frequencyCap?: {
+    impressionsPerUserPerDay?: number;
+    impressionsPerUserPerHour?: number;
+  };
+  schedule?: {
+    startDate?: string;
+    endDate?: string;
+    timezone?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+}
+
 // 用户管理 API
 export const userApi = {
   // 获取所有用户
@@ -336,6 +405,46 @@ export const purchaseHistoryApi = {
   deletePurchase: (id: number) => api.delete(`/api/users/purchases/${id}`),
 };
 
+// 广告活动管理 API
+export const campaignApi = {
+  // 获取所有广告活动（分页）
+  getAllCampaigns: (page: number = 0, size: number = 10) => 
+    api.get<{content: Campaign[], totalElements: number, totalPages: number}>(`/api/campaigns?page=${page}&size=${size}`),
+  
+  // 根据ID获取广告活动
+  getCampaignById: (id: string) => api.get<Campaign>(`/api/campaigns/${id}`),
+  
+  // 创建新的广告活动
+  createCampaign: (campaign: Campaign) => api.post<Campaign>('/api/campaigns', campaign),
+  
+  // 更新广告活动
+  updateCampaign: (id: string, campaign: Campaign) => 
+    api.put<Campaign>(`/api/campaigns/${id}`, campaign),
+  
+  // 删除广告活动
+  deleteCampaign: (id: string) => api.delete(`/api/campaigns/${id}`),
+  
+  // 更新广告活动状态
+  updateCampaignStatus: (id: string, status: string) => 
+    api.patch<Campaign>(`/api/campaigns/${id}/status`, { status }),
+  
+  // 根据广告主ID获取广告活动
+  getCampaignsByAdvertiser: (advertiserId: string) => 
+    api.get<Campaign[]>(`/api/campaigns/advertiser/${advertiserId}`),
+  
+  // 根据状态获取广告活动
+  getCampaignsByStatus: (status: string) => 
+    api.get<Campaign[]>(`/api/campaigns/status/${status}`),
+  
+  // 获取广告活动统计信息
+  getCampaignStatistics: () => 
+    api.get<{total: number, active: number, paused: number, completed: number}>('/api/campaigns/statistics'),
+  
+  // 搜索广告活动
+  searchCampaigns: (query: string) => 
+    api.get<Campaign[]>(`/api/campaigns/search?query=${encodeURIComponent(query)}`),
+};
+
 // 根据环境配置选择API实例
 const getApiInstance = () => {
   if (shouldUseMockApi) {
@@ -344,7 +453,8 @@ const getApiInstance = () => {
       userApi: mockApi.userApi,
       userProfileApi: mockApi.userProfileApi,
       activityTrackApi: mockApi.activityTrackApi,
-      purchaseHistoryApi: mockApi.purchaseHistoryApi
+      purchaseHistoryApi: mockApi.purchaseHistoryApi,
+      campaignApi: mockApi.campaignApi
     };
   } else {
     logger.info('API calls will use Real backend');
@@ -352,7 +462,8 @@ const getApiInstance = () => {
       userApi,
       userProfileApi,
       activityTrackApi,
-      purchaseHistoryApi
+      purchaseHistoryApi,
+      campaignApi
     };
   }
 };
@@ -364,7 +475,8 @@ export const {
   userApi: selectedUserApi,
   userProfileApi: selectedUserProfileApi,
   activityTrackApi: selectedActivityTrackApi,
-  purchaseHistoryApi: selectedPurchaseHistoryApi
+  purchaseHistoryApi: selectedPurchaseHistoryApi,
+  campaignApi: selectedCampaignApi
 } = apiInstance;
 
 // 为了向后兼容，也导出原始的API（已在上面单独导出，这里不需要重复）
