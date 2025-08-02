@@ -4,6 +4,13 @@ import fei.song.play_spring_boot_api.ads.domain.model.BidRequest;
 import fei.song.play_spring_boot_api.ads.domain.model.BidResponse;
 import fei.song.play_spring_boot_api.ads.service.BidServer;
 import fei.song.play_spring_boot_api.ads.service.BidRequestMetricsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +28,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/bid")
 @RequiredArgsConstructor
+@Tag(name = "OpenRTB Bidding", description = "OpenRTB竞价相关API")
 public class BidController {
     
     private final BidServer bidServer;
@@ -32,8 +40,16 @@ public class BidController {
     @PostMapping(value = "/request", 
                 consumes = MediaType.APPLICATION_JSON_VALUE,
                 produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "处理竞价请求", description = "处理OpenRTB竞价请求并返回竞价响应")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "成功处理竞价请求",
+                content = @Content(schema = @Schema(implementation = BidResponse.class))),
+        @ApiResponse(responseCode = "400", description = "竞价请求格式无效"),
+        @ApiResponse(responseCode = "204", description = "无竞价"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<BidResponse> handleBidRequest(
-            @RequestBody BidRequest bidRequest,
+            @Parameter(description = "OpenRTB竞价请求") @RequestBody BidRequest bidRequest,
             HttpServletRequest httpRequest) {
         
         long startTime = System.currentTimeMillis();
@@ -114,9 +130,14 @@ public class BidController {
      * 处理获胜通知
      */
     @PostMapping("/win/{bidId}")
+    @Operation(summary = "处理获胜通知", description = "处理竞价获胜通知")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "成功处理获胜通知"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<Void> handleWinNotification(
-            @PathVariable String bidId,
-            @RequestParam(required = false) Double winPrice,
+            @Parameter(description = "竞价ID") @PathVariable String bidId,
+            @Parameter(description = "获胜价格") @RequestParam(required = false) Double winPrice,
             HttpServletRequest httpRequest) {
         
         String clientIp = getClientIpAddress(httpRequest);
@@ -138,10 +159,15 @@ public class BidController {
      * 处理损失通知
      */
     @PostMapping("/loss/{bidId}")
+    @Operation(summary = "处理损失通知", description = "处理竞价损失通知")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "成功处理损失通知"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<Void> handleLossNotification(
-            @PathVariable String bidId,
-            @RequestParam(required = false) Double winPrice,
-            @RequestParam(required = false) Integer lossReason,
+            @Parameter(description = "竞价ID") @PathVariable String bidId,
+            @Parameter(description = "获胜价格") @RequestParam(required = false) Double winPrice,
+            @Parameter(description = "损失原因") @RequestParam(required = false) Integer lossReason,
             HttpServletRequest httpRequest) {
         
         String clientIp = getClientIpAddress(httpRequest);
@@ -164,6 +190,12 @@ public class BidController {
      * 获取服务器状态
      */
     @GetMapping("/status")
+    @Operation(summary = "获取服务器状态", description = "获取竞价服务器的运行状态信息")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "成功获取服务器状态",
+                content = @Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     public ResponseEntity<Map<String, Object>> getServerStatus() {
         try {
             Map<String, Object> status = bidServer.getServerStatistics();
@@ -178,6 +210,12 @@ public class BidController {
      * 健康检查端点
      */
     @GetMapping("/health")
+    @Operation(summary = "健康检查", description = "检查竞价服务器的健康状态")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "服务器健康",
+                content = @Content(schema = @Schema(implementation = Map.class))),
+        @ApiResponse(responseCode = "503", description = "服务不可用")
+    })
     public ResponseEntity<Map<String, String>> healthCheck() {
         Map<String, String> health = Map.of(
             "status", "UP",

@@ -4,6 +4,8 @@ import UserManagement from './components/UserManagement';
 import UserProfileManagement from './components/UserProfileManagement';
 import ActivityTrackManagement from './components/ActivityTrackManagement';
 import PurchaseHistoryManagement from './components/PurchaseHistoryManagement';
+import CampaignManagement from './components/CampaignManagement';
+import './components/CampaignManagement.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -26,6 +28,8 @@ function App() {
         return <ActivityTrackManagement />;
       case 'purchases':
         return <PurchaseHistoryManagement />;
+      case 'campaigns':
+        return <CampaignManagement />;
       default:
         return <UserManagement />;
     }
@@ -59,6 +63,12 @@ function App() {
             onClick={() => setActiveTab('purchases')}
           >
             购买历史
+          </button>
+          <button 
+            className={`nav-tab ${activeTab === 'campaigns' ? 'active' : ''}`}
+            onClick={() => setActiveTab('campaigns')}
+          >
+            广告活动
           </button>
         </nav>
       </header>
